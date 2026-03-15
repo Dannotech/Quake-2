@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ref_gl.vcxproj - Quake 2 OpenGL renderer DLL (ref_gl.dll)
+  Converted from ref_gl\ref_gl.dsp (VC6 Win32 configurations)
+  Output: $(RepoRoot)\Release\ref_gl.dll  or  $(RepoRoot)\Debug\ref_gl.dll
+
+  NOTE: OpenGL functions are loaded dynamically via GetProcAddress (qgl_win.c),
+  so opengl32.lib is NOT listed as a static dependency - matching original behavior.
+  If the dynamic loader fails at runtime, add opengl32.lib here.
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{CF06BEF5-A2E5-4C7B-B6E4-D98A7B3D3F03}</ProjectGuid>
+    <RootNamespace>ref_gl</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)..\..\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ref_gl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)..\..\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ref_gl\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <!-- ======================== RELEASE ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_gl;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- /Yu:gl_local.h — all gl_*.c files start with #include "gl_local.h". No ForcedIncludeFiles. -->
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>gl_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_gl\ref_gl.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== DEBUG ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_gl;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>gl_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_gl\ref_gl.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== SOURCE FILES ======================== -->
+  <ItemGroup>
+    <!-- PCH creator — /Yc:gl_local.h builds the PCH; gl_*.c trigger it naturally -->
+    <ClCompile Include="ref_gl_pch.c">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>gl_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <!-- GL renderer core -->
+    <ClCompile Include="..\..\ref_gl\gl_draw.c" />
+    <ClCompile Include="..\..\ref_gl\gl_image.c" />
+    <ClCompile Include="..\..\ref_gl\gl_light.c" />
+    <ClCompile Include="..\..\ref_gl\gl_mesh.c" />
+    <ClCompile Include="..\..\ref_gl\gl_model.c" />
+    <ClCompile Include="..\..\ref_gl\gl_rmain.c" />
+    <ClCompile Include="..\..\ref_gl\gl_rmisc.c" />
+    <ClCompile Include="..\..\ref_gl\gl_rsurf.c" />
+    <ClCompile Include="..\..\ref_gl\gl_warp.c" />
+    <!-- Win32 GL platform support — include "../ref_gl/gl_local.h" (path prefix) so
+         the PCH trigger string "gl_local.h" doesn't match; exclude from PCH -->
+    <ClCompile Include="..\..\win32\glw_imp.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\win32\qgl_win.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- Shared - these files don't include gl_local.h, so PCH doesn't apply -->
+    <ClCompile Include="..\..\game\q_shared.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\win32\q_shwin.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <!-- Headers -->
+  <ItemGroup>
+    <ClInclude Include="..\..\ref_gl\anorms.h" />
+    <ClInclude Include="..\..\ref_gl\anormtab.h" />
+    <ClInclude Include="..\..\ref_gl\gl_local.h" />
+    <ClInclude Include="..\..\ref_gl\gl_model.h" />
+    <ClInclude Include="..\..\ref_gl\qgl.h" />
+    <ClInclude Include="..\..\ref_gl\warpsin.h" />
+    <ClInclude Include="..\..\client\ref.h" />
+    <ClInclude Include="..\..\game\q_shared.h" />
+    <ClInclude Include="..\..\qcommon\qcommon.h" />
+    <ClInclude Include="..\..\qcommon\qfiles.h" />
+    <ClInclude Include="..\..\win32\glw_win.h" />
+    <ClInclude Include="..\..\win32\winquake.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ctf.vcxproj - Quake 2 Capture The Flag mod DLL (gamex86.dll)
+  Converted from ctf\ctf.dsp (VC6 Win32 configurations)
+  Output: $(RepoRoot)\ctf\Release\gamex86.dll  or  $(RepoRoot)\ctf\Debug\gamex86.dll
+
+  NOTE: CTF has its own standalone game directory and outputs to ctf\release\
+  to match original behavior (separate from base game's gamex86.dll).
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{CF06BEF5-A2E5-4C7B-B6E4-D98A7B3D3F05}</ProjectGuid>
+    <RootNamespace>ctf</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <!-- CTF outputs to its own subdirectory to avoid clobbering the base game DLL -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)..\..\ctf\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ctf\</IntDir>
+    <TargetName>gamex86</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)..\..\ctf\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ctf\</IntDir>
+    <TargetName>gamex86</TargetName>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <!-- ======================== RELEASE ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ctf;..\..\game;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- /Yu:g_local.h — all CTF g_*.c files start with #include "g_local.h". No ForcedIncludeFiles. -->
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>g_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ctf\ctf.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== DEBUG ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ctf;..\..\game;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>g_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ctf\ctf.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== SOURCE FILES ======================== -->
+  <ItemGroup>
+    <!-- PCH creator — /Yc:g_local.h (CTF's g_local.h) builds the PCH -->
+    <ClCompile Include="ctf_pch.c">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>g_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <!-- CTF game logic (separate copies from base game - original structure preserved) -->
+    <ClCompile Include="..\..\ctf\g_ai.c" />
+    <ClCompile Include="..\..\ctf\g_chase.c" />
+    <ClCompile Include="..\..\ctf\g_cmds.c" />
+    <ClCompile Include="..\..\ctf\g_combat.c" />
+    <ClCompile Include="..\..\ctf\g_ctf.c" />
+    <ClCompile Include="..\..\ctf\g_func.c" />
+    <ClCompile Include="..\..\ctf\g_items.c" />
+    <ClCompile Include="..\..\ctf\g_main.c" />
+    <ClCompile Include="..\..\ctf\g_misc.c" />
+    <ClCompile Include="..\..\ctf\g_monster.c" />
+    <ClCompile Include="..\..\ctf\g_phys.c" />
+    <ClCompile Include="..\..\ctf\g_save.c" />
+    <ClCompile Include="..\..\ctf\g_spawn.c" />
+    <ClCompile Include="..\..\ctf\g_svcmds.c" />
+    <ClCompile Include="..\..\ctf\g_target.c" />
+    <ClCompile Include="..\..\ctf\g_trigger.c" />
+    <ClCompile Include="..\..\ctf\g_utils.c" />
+    <ClCompile Include="..\..\ctf\g_weapon.c" />
+    <!-- Monster/Player -->
+    <ClCompile Include="..\..\ctf\m_move.c" />
+    <ClCompile Include="..\..\ctf\p_client.c" />
+    <ClCompile Include="..\..\ctf\p_hud.c" />
+    <ClCompile Include="..\..\ctf\p_menu.c" />
+    <ClCompile Include="..\..\ctf\p_trail.c" />
+    <ClCompile Include="..\..\ctf\p_view.c" />
+    <ClCompile Include="..\..\ctf\p_weapon.c" />
+    <!-- Shared - q_shared.c only includes q_shared.h, not g_local.h, so no PCH -->
+    <ClCompile Include="..\..\ctf\q_shared.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <!-- Headers -->
+  <ItemGroup>
+    <ClInclude Include="..\..\ctf\g_ctf.h" />
+    <ClInclude Include="..\..\ctf\g_local.h" />
+    <ClInclude Include="..\..\ctf\game.h" />
+    <ClInclude Include="..\..\ctf\m_player.h" />
+    <ClInclude Include="..\..\ctf\p_menu.h" />
+    <ClInclude Include="..\..\ctf\q_shared.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

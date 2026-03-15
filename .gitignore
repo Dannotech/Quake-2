@@ -1,0 +1,34 @@
+# -----------------------------------------------------------------------
+# Quake 2 VS2026 build — gitignore
+# -----------------------------------------------------------------------
+
+# Build output directories (binaries, libs, pdbs)
+/Debug/
+/Release/
+/ctf/Debug/
+/ctf/Release/
+
+# Intermediate compiler output (obj files, pchs, etc.)
+/build/vs2026/obj/
+
+# Transient build logs written during CI/dev builds
+/build/vs2026/build_output.txt
+/build/vs2026/build_error.txt
+
+# Visual Studio per-user and per-machine files
+*.vcxproj.user
+*.suo
+*.user
+*.aps
+*.ncb
+*.sdf
+*.opendb
+*.db
+.vs/
+
+# Claude Code project state (not part of the source tree)
+.claude/
+
+# Windows thumbnail / desktop cruft
+Thumbs.db
+Desktop.ini

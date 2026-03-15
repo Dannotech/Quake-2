@@ -3,6 +3,9 @@
 // Used by q2.rc
 //
 #define IDI_ICON1                       101
+/* VS2022 compat: IDS_STRING1 and IDD_DIALOG1 were in VC6 resource.h but missing from release */
+#define IDD_DIALOG1                     102
+#define IDS_STRING1                     103
 
 // Next default values for new objects
 // 

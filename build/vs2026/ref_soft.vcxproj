@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ref_soft.vcxproj - Quake 2 software renderer DLL (ref_soft.dll)
+  Converted from ref_soft\ref_soft.dsp (VC6 Win32 configurations)
+  Output: $(RepoRoot)\Release\ref_soft.dll  or  $(RepoRoot)\Debug\ref_soft.dll
+
+  Assembly files: Compiled with MASM (ml.exe) via the VS MASM build customization.
+  Original custom build rule: ml /c /Cp /coff /Fo$(OUTDIR)\$(InputName).obj /Zm /Zi $(InputPath)
+  The /coff flag generates PE COFF format required for Win32.
+  The /Zm flag enables MASM 5.1 compatibility mode.
+
+  NOTE: DirectDraw (ddraw.lib) is used by rw_ddraw.c. The Windows 10 SDK includes
+  ddraw.h and ddraw.lib. If ddraw.lib is missing, install the Windows SDK optional components.
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{CF06BEF5-A2E5-4C7B-B6E4-D98A7B3D3F04}</ProjectGuid>
+    <RootNamespace>ref_soft</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <!-- MASM build customization for .asm files -->
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="Shared" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)..\..\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ref_soft\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)..\..\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\ref_soft\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <!-- ======================== RELEASE ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_soft;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- /Yu:r_local.h — all r_*.c files start with #include "r_local.h". No ForcedIncludeFiles. -->
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>r_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <!-- MASM global settings for release -->
+    <MASM>
+      <UseSafeExceptionHandlers>false</UseSafeExceptionHandlers>
+      <!-- /Cp = preserve case, /coff = COFF format, /Zm = MASM 5.1 compat -->
+      <AdditionalOptions>/Cp /coff /Zm %(AdditionalOptions)</AdditionalOptions>
+    </MASM>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;ddraw.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_soft\ref_soft.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <!-- Legacy MASM assembly has no SAFESEH handlers - disable linker requirement -->
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== DEBUG ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_soft;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>r_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <MASM>
+      <UseSafeExceptionHandlers>false</UseSafeExceptionHandlers>
+      <AdditionalOptions>/Cp /coff /Zm /Zi %(AdditionalOptions)</AdditionalOptions>
+    </MASM>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;ddraw.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_soft\ref_soft.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== SOURCE FILES (C) ======================== -->
+  <ItemGroup>
+    <!-- PCH creator — /Yc:r_local.h builds the PCH; r_*.c trigger it naturally.
+         ForcedIncludeFiles NOT used (avoids double-inclusion of guardless q_shared.h).
+         Note: ForcedIncludeFiles is a ClCompile property and never applies to MASM items. -->
+    <ClCompile Include="ref_soft_pch.c">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>r_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="..\..\ref_soft\r_aclip.c" />
+    <ClCompile Include="..\..\ref_soft\r_alias.c" />
+    <ClCompile Include="..\..\ref_soft\r_bsp.c" />
+    <ClCompile Include="..\..\ref_soft\r_draw.c" />
+    <ClCompile Include="..\..\ref_soft\r_edge.c" />
+    <ClCompile Include="..\..\ref_soft\r_image.c" />
+    <ClCompile Include="..\..\ref_soft\r_light.c" />
+    <ClCompile Include="..\..\ref_soft\r_main.c" />
+    <ClCompile Include="..\..\ref_soft\r_misc.c" />
+    <ClCompile Include="..\..\ref_soft\r_model.c" />
+    <ClCompile Include="..\..\ref_soft\r_part.c" />
+    <ClCompile Include="..\..\ref_soft\r_poly.c" />
+    <ClCompile Include="..\..\ref_soft\r_polyse.c" />
+    <ClCompile Include="..\..\ref_soft\r_rast.c" />
+    <ClCompile Include="..\..\ref_soft\r_scan.c" />
+    <ClCompile Include="..\..\ref_soft\r_sprite.c" />
+    <ClCompile Include="..\..\ref_soft\r_surf.c" />
+    <!-- Win32 DIB/DirectDraw rendering backend — include rw_win.h not r_local.h -->
+    <ClCompile Include="..\..\win32\rw_ddraw.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\win32\rw_dib.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\win32\rw_imp.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- Shared - these files don't include r_local.h, so PCH doesn't apply -->
+    <ClCompile Include="..\..\game\q_shared.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\win32\q_shwin.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <!-- ======================== ASSEMBLY FILES (x86 MASM) ======================== -->
+  <!-- These are x86-only; excluded from x64 builds (not applicable for Win32 target) -->
+  <ItemGroup>
+    <MASM Include="..\..\ref_soft\r_aclipa.asm">
+      <ObjectFileName>$(IntDir)r_aclipa.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_draw16.asm">
+      <ObjectFileName>$(IntDir)r_draw16.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_drawa.asm">
+      <ObjectFileName>$(IntDir)r_drawa.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_edgea.asm">
+      <ObjectFileName>$(IntDir)r_edgea.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_polysa.asm">
+      <ObjectFileName>$(IntDir)r_polysa.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_scana.asm">
+      <ObjectFileName>$(IntDir)r_scana.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_spr8.asm">
+      <ObjectFileName>$(IntDir)r_spr8.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_surf8.asm">
+      <ObjectFileName>$(IntDir)r_surf8.obj</ObjectFileName>
+    </MASM>
+    <MASM Include="..\..\ref_soft\r_varsa.asm">
+      <ObjectFileName>$(IntDir)r_varsa.obj</ObjectFileName>
+    </MASM>
+  </ItemGroup>
+  <!-- Headers -->
+  <ItemGroup>
+    <ClInclude Include="..\..\ref_soft\adivtab.h" />
+    <ClInclude Include="..\..\ref_soft\anorms.h" />
+    <ClInclude Include="..\..\ref_soft\r_local.h" />
+    <ClInclude Include="..\..\ref_soft\r_model.h" />
+    <ClInclude Include="..\..\ref_soft\rand1k.h" />
+    <ClInclude Include="..\..\client\ref.h" />
+    <ClInclude Include="..\..\game\q_shared.h" />
+    <ClInclude Include="..\..\qcommon\qcommon.h" />
+    <ClInclude Include="..\..\qcommon\qfiles.h" />
+    <ClInclude Include="..\..\win32\rw_win.h" />
+    <ClInclude Include="..\..\win32\winquake.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- MASM targets must come AFTER Microsoft.Cpp.targets -->
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  quake2.vcxproj - Main Quake 2 executable
+  Converted from quake2.dsp (VC6 Win32 Release / Debug configurations)
+  Alpha (AXP) configurations dropped - not supported by modern MSVC toolchain.
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{CF06BEF5-A2E5-4C7B-B6E4-D98A7B3D3F01}</ProjectGuid>
+    <RootNamespace>quake2</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- Release configuration -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <!-- Debug configuration -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <!-- Output/Intermediate directories - outputs go to $(RepoRoot)\Release\ or $(RepoRoot)\Debug\ -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)..\..\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\quake2\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)..\..\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\quake2\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <!-- ======================== RELEASE COMPILE SETTINGS ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <!-- Original: /G5 /MT /W4 /GX /Zd /O2 -->
+      <!-- /G5 dropped (Pentium-specific, not in modern MSVC) -->
+      <!-- /GX replaced by /EHsc -->
+      <!-- /Zd replaced by /Zi (old line-number-only debug format removed) -->
+      <!-- /YX removed (automatic PCH detection removed in VS2005+) -->
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\client;..\..\game;..\..\qcommon;..\..\server;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Suppress noisy-but-harmless VC6-era warnings -->
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;4273;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- PCH disabled for the exe: source files span client/, server/, qcommon/, win32/ with
+           different umbrella headers. q_shared.h (the only truly universal header) has no
+           include guards, making ForcedIncludeFiles unsafe. PCH is on the four DLL projects. -->
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== DEBUG COMPILE SETTINGS ======================== -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <!-- Original: /G5 /MTd /W3 /GX /ZI /Od -->
+      <!-- /FR (browse info) dropped (not supported in modern MSVC) -->
+      <!-- /Gm (minimal rebuild) dropped (removed in VS2019) -->
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\client;..\..\game;..\..\qcommon;..\..\server;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4311;4312;4133;4028;4273;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- ======================== SOURCE FILES ======================== -->
+  <ItemGroup>
+    <!-- Client -->
+    <ClCompile Include="..\..\client\cl_cin.c" />
+    <ClCompile Include="..\..\client\cl_ents.c" />
+    <ClCompile Include="..\..\client\cl_fx.c" />
+    <ClCompile Include="..\..\client\cl_input.c" />
+    <ClCompile Include="..\..\client\cl_inv.c" />
+    <ClCompile Include="..\..\client\cl_main.c" />
+    <ClCompile Include="..\..\client\cl_newfx.c" />
+    <ClCompile Include="..\..\client\cl_parse.c" />
+    <ClCompile Include="..\..\client\cl_pred.c" />
+    <ClCompile Include="..\..\client\cl_scrn.c" />
+    <ClCompile Include="..\..\client\cl_tent.c" />
+    <ClCompile Include="..\..\client\cl_view.c" />
+    <ClCompile Include="..\..\client\console.c" />
+    <ClCompile Include="..\..\client\keys.c" />
+    <ClCompile Include="..\..\client\menu.c" />
+    <ClCompile Include="..\..\client\qmenu.c" />
+    <ClCompile Include="..\..\client\snd_dma.c" />
+    <ClCompile Include="..\..\client\snd_mem.c" />
+    <ClCompile Include="..\..\client\snd_mix.c" />
+    <ClCompile Include="..\..\client\x86.c" />
+    <!-- Game shared -->
+    <ClCompile Include="..\..\game\m_flash.c" />
+    <ClCompile Include="..\..\game\q_shared.c" />
+    <!-- Common -->
+    <ClCompile Include="..\..\qcommon\cmd.c" />
+    <ClCompile Include="..\..\qcommon\cmodel.c" />
+    <ClCompile Include="..\..\qcommon\common.c" />
+    <ClCompile Include="..\..\qcommon\crc.c" />
+    <ClCompile Include="..\..\qcommon\cvar.c" />
+    <ClCompile Include="..\..\qcommon\files.c" />
+    <ClCompile Include="..\..\qcommon\md4.c" />
+    <ClCompile Include="..\..\qcommon\net_chan.c" />
+    <ClCompile Include="..\..\qcommon\pmove.c" />
+    <!-- Server -->
+    <ClCompile Include="..\..\server\sv_ccmds.c" />
+    <ClCompile Include="..\..\server\sv_ents.c" />
+    <ClCompile Include="..\..\server\sv_game.c" />
+    <ClCompile Include="..\..\server\sv_init.c" />
+    <ClCompile Include="..\..\server\sv_main.c" />
+    <ClCompile Include="..\..\server\sv_send.c" />
+    <ClCompile Include="..\..\server\sv_user.c" />
+    <ClCompile Include="..\..\server\sv_world.c" />
+    <!-- Win32 platform (exactly as in quake2.dsp - rw_*.c and qgl_win.c belong to the renderer DLLs only) -->
+    <ClCompile Include="..\..\win32\cd_win.c" />
+    <ClCompile Include="..\..\win32\conproc.c" />
+    <ClCompile Include="..\..\win32\in_win.c" />
+    <ClCompile Include="..\..\win32\net_wins.c" />
+    <ClCompile Include="..\..\win32\q_shwin.c" />
+    <ClCompile Include="..\..\win32\snd_win.c" />
+    <ClCompile Include="..\..\win32\sys_win.c" />
+    <ClCompile Include="..\..\win32\vid_dll.c" />
+    <ClCompile Include="..\..\win32\vid_menu.c" />
+  </ItemGroup>
+  <!-- Resource files -->
+  <ItemGroup>
+    <ResourceCompile Include="..\..\win32\winquake.rc" />
+  </ItemGroup>
+  <!-- Header files (for IDE navigation only) -->
+  <ItemGroup>
+    <ClInclude Include="..\..\client\cdaudio.h" />
+    <ClInclude Include="..\..\client\client.h" />
+    <ClInclude Include="..\..\client\console.h" />
+    <ClInclude Include="..\..\client\input.h" />
+    <ClInclude Include="..\..\client\keys.h" />
+    <ClInclude Include="..\..\client\qmenu.h" />
+    <ClInclude Include="..\..\client\ref.h" />
+    <ClInclude Include="..\..\client\screen.h" />
+    <ClInclude Include="..\..\client\sound.h" />
+    <ClInclude Include="..\..\client\vid.h" />
+    <ClInclude Include="..\..\game\game.h" />
+    <ClInclude Include="..\..\game\q_shared.h" />
+    <ClInclude Include="..\..\qcommon\qcommon.h" />
+    <ClInclude Include="..\..\qcommon\qfiles.h" />
+    <ClInclude Include="..\..\server\server.h" />
+    <ClInclude Include="..\..\win32\resource.h" />
+    <ClInclude Include="..\..\win32\winquake.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
