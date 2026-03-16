@@ -580,6 +580,13 @@ void SCR_PlayCinematic (char *arg)
 	char	name[MAX_OSPATH], *dot;
 	int		old_khz;
 
+	// Skip the id logo cinematics for faster dev iteration
+	if (!_strnicmp (arg, "idlogo", 6) || !_strnicmp (arg, "idlog2", 6))
+	{
+		SCR_FinishCinematic ();
+		return;
+	}
+
 	// make sure CD isn't playing music
 	CDAudio_Stop();
 

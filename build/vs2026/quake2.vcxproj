@@ -30,6 +30,7 @@
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>false</WholeProgramOptimization>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <!-- Debug configuration -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -37,6 +38,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
@@ -66,6 +68,9 @@
       <!-- /GX replaced by /EHsc -->
       <!-- /Zd replaced by /Zi (old line-number-only debug format removed) -->
       <!-- /YX removed (automatic PCH detection removed in VS2005+) -->
+      <!-- Unity: group only files from the same folder so per-subsystem headers
+           (client.h, server.h, qcommon.h) are each used by exactly one batch -->
+      <CombineFilesOnlyFromTheSameFolder>true</CombineFilesOnlyFromTheSameFolder>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -103,6 +108,7 @@
       <!-- Original: /G5 /MTd /W3 /GX /ZI /Od -->
       <!-- /FR (browse info) dropped (not supported in modern MSVC) -->
       <!-- /Gm (minimal rebuild) dropped (removed in VS2019) -->
+      <CombineFilesOnlyFromTheSameFolder>true</CombineFilesOnlyFromTheSameFolder>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -179,7 +185,11 @@
     <ClCompile Include="..\..\win32\snd_win.c" />
     <ClCompile Include="..\..\win32\sys_win.c" />
     <ClCompile Include="..\..\win32\vid_dll.c" />
-    <ClCompile Include="..\..\win32\vid_menu.c" />
+    <!-- vid_menu.c defines local 'DriverCallback(void*)' which collides with
+         Win32 API DriverCallback from mmsystem.h pulled in by other unity files -->
+    <ClCompile Include="..\..\win32\vid_menu.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
   </ItemGroup>
   <!-- Resource files -->
   <ItemGroup>
