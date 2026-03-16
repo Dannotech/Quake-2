@@ -581,7 +581,7 @@ void SCR_PlayCinematic (char *arg)
 	int		old_khz;
 
 	// Skip the id logo cinematics for faster dev iteration
-	if (!_strnicmp (arg, "idlogo", 6) || !_strnicmp (arg, "idlog2", 6))
+	if (!_strnicmp (arg, "idlog.cin", 9))
 	{
 		SCR_FinishCinematic ();
 		return;
