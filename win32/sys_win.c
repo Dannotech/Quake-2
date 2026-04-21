@@ -418,8 +418,11 @@ void Sys_SendKeyEvents (void)
       	DispatchMessage (&msg);
 	}
 
-	// grab frame time 
-	sys_frame_time = timeGetTime();	// FIXME: should this be at start?
+	// grab frame time
+	if (sgltest_active)
+		sys_frame_time = (unsigned) sgltest_simulated_ms;  // deterministic clock
+	else
+		sys_frame_time = timeGetTime();	// FIXME: should this be at start?
 }
 
 
@@ -666,7 +669,8 @@ static qboolean SglTest_ParseArgs (void)
 		// triple must fit; cap at MAX_NUM_ARGVS.
 		{
 			static const char *overrides[][3] = {
-				{ "gl_driver",      "SGL.dll" },   // Force SGL, not opengl32.
+				{ "vid_ref",        "gl"      },   // Use ref_gl (GL path), not ref_soft.
+				{ "gl_driver",      "SGL.dll" },   // Force SGL as the GL driver, not opengl32.
 				{ "vid_fullscreen", "0"       },   // Windowed, fixed size.
 				{ "gl_mode",        "3"       },   // 640x480, deterministic.
 				{ "s_initsound",    "0"       },   // No audio thread.
@@ -703,8 +707,23 @@ static void SglTest_Run (void)
 	MSG		msg;
 	int		i;
 
-	// Defensive check: Q2 will silently fall back to opengl32 if SGL.dll failed
-	// to load. A falsely-passing test is worse than a noisy failure.
+	/* Defensive checks. Q2 silently falls back to the SW renderer if vid_ref
+	   isn't "gl", or to opengl32 if gl_driver's DLL didn't load. Either
+	   produces a screenshot that has nothing to do with SGL — a false pass.
+	   Fail fast with distinct exit codes so the harness script can tell
+	   them apart in the log. */
+	{
+		cvar_t *vid_ref_cv = Cvar_Get ("vid_ref", "soft", CVAR_ARCHIVE);
+		if (strcmp (vid_ref_cv->string, "gl") != 0) {
+			fprintf (stderr,
+				"-sgltest: vid_ref is \"%s\", not \"gl\". "
+				"Q2 is using the software renderer so SGL is not being driven.\n",
+				vid_ref_cv->string);
+			fflush (stderr);
+			exit (4);
+		}
+	}
+
 	if (!GetModuleHandleA ("SGL.dll"))
 	{
 		fprintf (stderr,
@@ -719,6 +738,12 @@ static void SglTest_Run (void)
 	// Load the test map synchronously.
 	Cbuf_AddText (va("map %s\n", sgltest_mapname));
 	Cbuf_Execute ();
+
+	// Re-seed rand() after map load. Map loading consumes some number of
+	// rand() calls (entity spawning, pak indexing, etc) that we don't have
+	// tight control over; re-seeding here guarantees the gameplay-frame
+	// particle/fx RNG sequence is deterministic from a known state.
+	srand (42);
 
 	// Step a fixed number of frames at a fixed dt — nothing reads wall-clock here.
 	// sgltest_simulated_ms is the virtual clock Sys_Milliseconds returns while
