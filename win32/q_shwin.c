@@ -116,11 +116,30 @@ void Hunk_Free (void *base)
 Sys_Milliseconds
 ================
 */
+// q_shwin.c is compiled into quake2.exe, ref_gl.dll, and ref_soft.dll
+// independently (unity build). Each module gets its own copy of these.
+// Only quake2.exe's SglTest_Run writes them; the renderer DLLs see them
+// as always-false / always-zero, which means their own Sys_Milliseconds
+// behaves normally — harmless because the renderers don't use it for
+// rendering correctness, only optional host_speeds timing stats.
+qboolean sgltest_active        = false;
+int      sgltest_simulated_ms  = 0;
+
 int	curtime;
 int Sys_Milliseconds (void)
 {
 	static int		base;
 	static qboolean	initialized = false;
+
+	// -sgltest mode: return a virtual clock driven by SglTest_Run's frame
+	// counter. Keeps cls.realtime, network timeouts, and any other
+	// Sys_Milliseconds consumer in lockstep with our injected fixed dt,
+	// independent of real wall-clock.
+	if (sgltest_active)
+	{
+		curtime = sgltest_simulated_ms;
+		return curtime;
+	}
 
 	if (!initialized)
 	{	// let base retain 16 bits of effectively random data

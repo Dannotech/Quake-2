@@ -92,72 +92,126 @@ typedef struct _TargaHeader {
 } TargaHeader;
 
 
-/* 
-================== 
-GL_ScreenShot_f
-================== 
-*/  
-void GL_ScreenShot_f (void) 
+/*
+==================
+GL_WriteScreenshot
+
+Reads the current GL framebuffer and writes it as a 24-bit uncompressed TGA
+to `path` (an absolute or gamedir-relative filesystem path). Extracted from
+GL_ScreenShot_f so both the interactive "screenshot" command and the
+-sgltest harness can share the same pixel-readback + BGR-pack + TGA-write
+code. Returns true on success, false on fopen/fwrite failure.
+==================
+*/
+qboolean GL_WriteScreenshot (const char *path)
 {
-	byte		*buffer;
-	char		picname[80]; 
+	byte	*buffer;
+	int		i, c, temp;
+	FILE	*f;
+
+	buffer = malloc (vid.width * vid.height * 3 + 18);
+	if (!buffer)
+		return false;
+
+	memset (buffer, 0, 18);
+	buffer[2]  = 2;			// uncompressed true-color
+	buffer[12] = vid.width  & 255;
+	buffer[13] = vid.width  >> 8;
+	buffer[14] = vid.height & 255;
+	buffer[15] = vid.height >> 8;
+	buffer[16] = 24;		// bits per pixel
+
+	qglReadPixels (0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer + 18);
+
+	// Swap RGB -> BGR (TGA byte order).
+	c = 18 + vid.width * vid.height * 3;
+	for (i = 18; i < c; i += 3)
+	{
+		temp = buffer[i];
+		buffer[i]     = buffer[i + 2];
+		buffer[i + 2] = temp;
+	}
+
+	f = fopen (path, "wb");
+	if (!f)
+	{
+		free (buffer);
+		return false;
+	}
+	fwrite (buffer, 1, c, f);
+	fclose (f);
+	free (buffer);
+	return true;
+}
+
+/*
+==================
+GL_ScreenShot_f
+==================
+*/
+void GL_ScreenShot_f (void)
+{
+	char		picname[80];
 	char		checkname[MAX_OSPATH];
-	int			i, c, temp;
+	int			i;
 	FILE		*f;
 
 	// create the scrnshots directory if it doesn't exist
 	Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot", ri.FS_Gamedir());
 	Sys_Mkdir (checkname);
 
-// 
-// find a file name to save it to 
-// 
+//
+// find a file name to save it to
+//
 	strcpy(picname,"quake00.tga");
 
-	for (i=0 ; i<=99 ; i++) 
-	{ 
-		picname[5] = i/10 + '0'; 
-		picname[6] = i%10 + '0'; 
+	for (i=0 ; i<=99 ; i++)
+	{
+		picname[5] = i/10 + '0';
+		picname[6] = i%10 + '0';
 		Com_sprintf (checkname, sizeof(checkname), "%s/scrnshot/%s", ri.FS_Gamedir(), picname);
 		f = fopen (checkname, "rb");
 		if (!f)
 			break;	// file doesn't exist
 		fclose (f);
-	} 
-	if (i==100) 
+	}
+	if (i==100)
 	{
-		ri.Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: Couldn't create a file\n"); 
+		ri.Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: Couldn't create a file\n");
 		return;
  	}
 
+	if (GL_WriteScreenshot (checkname))
+		ri.Con_Printf (PRINT_ALL, "Wrote %s\n", picname);
+	else
+		ri.Con_Printf (PRINT_ALL, "SCR_ScreenShot_f: write failed\n");
+}
 
-	buffer = malloc(vid.width*vid.height*3 + 18);
-	memset (buffer, 0, 18);
-	buffer[2] = 2;		// uncompressed type
-	buffer[12] = vid.width&255;
-	buffer[13] = vid.width>>8;
-	buffer[14] = vid.height&255;
-	buffer[15] = vid.height>>8;
-	buffer[16] = 24;	// pixel size
+/*
+==================
+GL_TestScreenShot_f
 
-	qglReadPixels (0, 0, vid.width, vid.height, GL_RGB, GL_UNSIGNED_BYTE, buffer+18 ); 
+Test harness entry point: writes the current framebuffer to the absolute
+path given as arg 1 ('sgltest_screenshot "C:/tmp/out.tga"'). Distinct from
+GL_ScreenShot_f which picks an auto-incrementing filename under scrnshot/.
+==================
+*/
+void GL_TestScreenShot_f (void)
+{
+	const char *path;
 
-	// swap rgb to bgr
-	c = 18+vid.width*vid.height*3;
-	for (i=18 ; i<c ; i+=3)
+	if (ri.Cmd_Argc () < 2)
 	{
-		temp = buffer[i];
-		buffer[i] = buffer[i+2];
-		buffer[i+2] = temp;
+		ri.Con_Printf (PRINT_ALL, "usage: sgltest_screenshot <absolute-path>\n");
+		return;
 	}
+	path = ri.Cmd_Argv (1);
 
-	f = fopen (checkname, "wb");
-	fwrite (buffer, 1, c, f);
-	fclose (f);
-
-	free (buffer);
-	ri.Con_Printf (PRINT_ALL, "Wrote %s\n", picname);
-} 
+	if (GL_WriteScreenshot (path))
+		ri.Con_Printf (PRINT_ALL, "sgltest_screenshot: wrote %s\n", path);
+	else
+		ri.Con_Printf (PRINT_ALL, "sgltest_screenshot: failed to write %s\n", path);
+}
 
 /*
 ** GL_Strings_f

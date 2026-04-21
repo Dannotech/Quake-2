@@ -1395,12 +1395,20 @@ void Com_Error_f (void)
 Qcommon_Init
 =================
 */
+extern qboolean sgltest_active;  // defined in win32/sys_win.c
+
 void Qcommon_Init (int argc, char **argv)
 {
 	char	*s;
 
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
+
+	// -sgltest mode: pin the C stdlib RNG before anything seeds it (particle
+	// systems, entity spawn, network jitter all read rand()). Must be the
+	// first determinism hook — any rand() call before this is non-deterministic.
+	if (sgltest_active)
+		srand (42);
 
 	z_chain.next = z_chain.prev = &z_chain;
 

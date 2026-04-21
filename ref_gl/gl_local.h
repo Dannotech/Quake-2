@@ -278,6 +278,8 @@ void	R_Shutdown( void );
 
 void R_RenderView (refdef_t *fd);
 void GL_ScreenShot_f (void);
+void GL_TestScreenShot_f (void);
+qboolean GL_WriteScreenshot (const char *path);
 void R_DrawAliasModel (entity_t *e);
 void R_DrawBrushModel (entity_t *e);
 void R_DrawSpriteModel (entity_t *e);

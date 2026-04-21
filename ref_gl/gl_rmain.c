@@ -1038,6 +1038,7 @@ void R_Register( void )
 
 	ri.Cmd_AddCommand( "imagelist", GL_ImageList_f );
 	ri.Cmd_AddCommand( "screenshot", GL_ScreenShot_f );
+	ri.Cmd_AddCommand( "sgltest_screenshot", GL_TestScreenShot_f );
 	ri.Cmd_AddCommand( "modellist", Mod_Modellist_f );
 	ri.Cmd_AddCommand( "gl_strings", GL_Strings_f );
 }
@@ -1338,6 +1339,9 @@ int R_Init( void *hinstance, void *hWnd )
 	err = qglGetError();
 	if ( err != GL_NO_ERROR )
 		ri.Con_Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
+
+	// Callers (vid_dll.c) treat -1 as failure; 0 signals successful init.
+	return 0;
 }
 
 /*

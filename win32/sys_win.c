@@ -47,6 +47,28 @@ static HANDLE		hinput, houtput;
 unsigned	sys_msg_time;
 unsigned	sys_frame_time;
 
+/* =========================================================================
+   SGL regression-test harness hooks.
+
+   -sgltest <mapname> <outputPath> [frames]
+
+   When active, Q2 replaces its main loop with a deterministic frame stepper
+   that loads the named map, runs a fixed number of frames (default 30) at
+   a constant 16 ms/frame, writes a screenshot TGA to outputPath, then exits.
+   Sources of wall-clock non-determinism (Sys_Milliseconds, wait counters,
+   sound thread) are bypassed so runs produce byte-identical output.
+   ========================================================================= */
+
+// Defined in q_shwin.c so every module compiled against it (quake2.exe,
+// ref_gl.dll, ref_soft.dll) links — only quake2.exe actually mutates them.
+extern qboolean	sgltest_active;
+extern int		sgltest_simulated_ms;
+
+char		sgltest_mapname[64];
+char		sgltest_outpath[MAX_OSPATH];
+int			sgltest_frames = 30;
+#define		SGLTEST_FIXED_DT_MS 16
+
 
 static HANDLE		qwclsemaphore;
 
@@ -76,7 +98,17 @@ void Sys_Error (char *error, ...)
 	vsprintf (text, error, argptr);
 	va_end (argptr);
 
-	MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
+	if (sgltest_active)
+	{
+		// No modal dialog in automated test runs — write to stderr and exit
+		// non-zero so the harness script catches the failure.
+		fprintf (stderr, "Q2 Sys_Error: %s\n", text);
+		fflush (stderr);
+	}
+	else
+	{
+		MessageBox(NULL, text, "Error", 0 /* MB_OK */ );
+	}
 
 	if (qwclsemaphore)
 		CloseHandle (qwclsemaphore);
@@ -585,6 +617,143 @@ void ParseCommandLine (LPSTR lpCmdLine)
 
 /*
 ==================
+SglTest_ParseArgs
+
+Scans argv[] for "-sgltest <mapname> <outputPath> [frames]", extracts the
+parameters into the sgltest_* globals, and rewrites the remaining argv so
+Q2's normal arg parser doesn't see our switch. Also synthesizes a batch of
+"+set" overrides that pin every source of non-determinism before the
+renderer initializes. Returns true if sgltest mode was requested.
+==================
+*/
+static qboolean SglTest_ParseArgs (void)
+{
+	int i, j, consumed;
+
+	for (i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-sgltest") != 0)
+			continue;
+
+		if (i + 2 >= argc)
+		{
+			fprintf (stderr, "-sgltest requires <mapname> <outputPath> [frames]\n");
+			exit (2);
+		}
+
+		strncpy (sgltest_mapname, argv[i+1], sizeof(sgltest_mapname) - 1);
+		sgltest_mapname[sizeof(sgltest_mapname) - 1] = '\0';
+		strncpy (sgltest_outpath, argv[i+2], sizeof(sgltest_outpath) - 1);
+		sgltest_outpath[sizeof(sgltest_outpath) - 1] = '\0';
+
+		consumed = 3;
+		if (i + 3 < argc && argv[i+3][0] >= '0' && argv[i+3][0] <= '9')
+		{
+			sgltest_frames = atoi (argv[i+3]);
+			if (sgltest_frames < 1) sgltest_frames = 1;
+			consumed = 4;
+		}
+
+		// Remove "-sgltest ..." from argv so the main parser ignores it.
+		for (j = i; j + consumed < argc; j++)
+			argv[j] = argv[j + consumed];
+		argc -= consumed;
+
+		sgltest_active = true;
+
+		// Synthesize "+set" overrides. These land in argv for Qcommon_Init's
+		// Cbuf_AddEarlyCommands, applied AFTER config.cfg so they win. Each
+		// triple must fit; cap at MAX_NUM_ARGVS.
+		{
+			static const char *overrides[][3] = {
+				{ "gl_driver",      "SGL.dll" },   // Force SGL, not opengl32.
+				{ "vid_fullscreen", "0"       },   // Windowed, fixed size.
+				{ "gl_mode",        "3"       },   // 640x480, deterministic.
+				{ "s_initsound",    "0"       },   // No audio thread.
+				{ "cl_introPlayed", "1"       },   // Skip intro cinematic.
+				{ "vid_xpos",       "0"       },   // Fixed window position.
+				{ "vid_ypos",       "0"       },
+			};
+			int k;
+			int n = (int)(sizeof(overrides) / sizeof(overrides[0]));
+			for (k = 0; k < n && argc + 3 <= MAX_NUM_ARGVS; k++)
+			{
+				argv[argc++] = "+set";
+				argv[argc++] = (char *)overrides[k][0];
+				argv[argc++] = (char *)overrides[k][1];
+			}
+		}
+
+		return true;
+	}
+	return false;
+}
+
+/*
+==================
+SglTest_Run
+
+Replaces Q2's main message loop when -sgltest is active. Drives exactly
+sgltest_frames frames with a constant SGLTEST_FIXED_DT_MS timestep, writes
+the screenshot, and quits. Never reads Sys_Milliseconds in the render path.
+==================
+*/
+static void SglTest_Run (void)
+{
+	MSG		msg;
+	int		i;
+
+	// Defensive check: Q2 will silently fall back to opengl32 if SGL.dll failed
+	// to load. A falsely-passing test is worse than a noisy failure.
+	if (!GetModuleHandleA ("SGL.dll"))
+	{
+		fprintf (stderr,
+			"-sgltest: SGL.dll is not loaded in this process. "
+			"Q2 fell back to the default GL driver. Aborting to avoid a false pass.\n");
+		fflush (stderr);
+		exit (3);
+	}
+
+	_controlfp (_PC_24, _MCW_PC);
+
+	// Load the test map synchronously.
+	Cbuf_AddText (va("map %s\n", sgltest_mapname));
+	Cbuf_Execute ();
+
+	// Step a fixed number of frames at a fixed dt — nothing reads wall-clock here.
+	// sgltest_simulated_ms is the virtual clock Sys_Milliseconds returns while
+	// the test is active; advancing it here keeps cls.realtime and any timeout
+	// arithmetic in lockstep with our injected frame dt.
+	for (i = 0; i < sgltest_frames; i++)
+	{
+		// Drain pending window messages so the window stays responsive and
+		// WM_PAINT etc don't pile up, but don't let them drive timing.
+		while (PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
+		{
+			if (!GetMessage (&msg, NULL, 0, 0))
+			{
+				Com_Quit ();
+				return;
+			}
+			sys_msg_time = msg.time;
+			TranslateMessage (&msg);
+			DispatchMessage (&msg);
+		}
+
+		sgltest_simulated_ms += SGLTEST_FIXED_DT_MS;
+		Qcommon_Frame (SGLTEST_FIXED_DT_MS);
+	}
+
+	// Fire the screenshot via our test-only command so ref_gl writes to the
+	// absolute path we were given instead of baseq2/scrnshot/quakeNN.tga.
+	Cbuf_AddText (va("sgltest_screenshot \"%s\"\n", sgltest_outpath));
+	Cbuf_Execute ();
+
+	Sys_Quit ();
+}
+
+/*
+==================
 WinMain
 
 ==================
@@ -605,6 +774,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	ParseCommandLine (lpCmdLine);
 
+	// Intercept -sgltest before Sys_ScanForCD et al — it synthesizes its own
+	// argv additions and mutually excludes normal interactive startup.
+	SglTest_ParseArgs ();
+
 	// if we find the CD, add a +set cddir xxx command line
 	cddir = Sys_ScanForCD ();
 	if (cddir && argc < MAX_NUM_ARGVS - 3)
@@ -624,6 +797,13 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 
 	Qcommon_Init (argc, argv);
+
+	if (sgltest_active)
+	{
+		SglTest_Run ();
+		return 0;  // never reached — SglTest_Run calls Sys_Quit.
+	}
+
 	oldtime = Sys_Milliseconds ();
 
     /* main window message loop */
