@@ -669,14 +669,17 @@ static qboolean SglTest_ParseArgs (void)
 		// triple must fit; cap at MAX_NUM_ARGVS.
 		{
 			static const char *overrides[][3] = {
-				{ "vid_ref",        "gl"      },   // Use ref_gl (GL path), not ref_soft.
-				{ "gl_driver",      "SGL.dll" },   // Force SGL as the GL driver, not opengl32.
-				{ "vid_fullscreen", "0"       },   // Windowed, fixed size.
-				{ "gl_mode",        "3"       },   // 640x480, deterministic.
-				{ "s_initsound",    "0"       },   // No audio thread.
-				{ "cl_introPlayed", "1"       },   // Skip intro cinematic.
-				{ "vid_xpos",       "0"       },   // Fixed window position.
-				{ "vid_ypos",       "0"       },
+				{ "vid_ref",        "gl"                   },   // Use ref_gl (GL path), not ref_soft.
+				{ "gl_driver",      "SGL.dll"              },   // Force SGL as the GL driver, not opengl32.
+				{ "vid_fullscreen", "0"                    },   // Windowed, fixed size.
+				{ "gl_mode",        "3"                    },   // 640x480, deterministic.
+				{ "s_initsound",    "0"                    },   // No audio thread.
+				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
+				{ "vid_xpos",       "0"                    },   // Fixed window position.
+				{ "vid_ypos",       "0"                    },
+				{ "gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST" }, // Pin texture filter. gl_texturemode is
+				// CVAR_ARCHIVE, so config.cfg can contaminate across runs unless we pin. Matches Q2's
+				// out-of-box default so goldens were captured with this value too.
 			};
 			int k;
 			int n = (int)(sizeof(overrides) / sizeof(overrides[0]));
