@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // sys_win.h
 
 #include "../qcommon/qcommon.h"
+#include "../client/client.h"  // for client_static_t / connstate_t (ca_active etc.)
 #include "winquake.h"
 #include "resource.h"
 #include <errno.h>
@@ -68,6 +69,25 @@ char		sgltest_mapname[64];
 char		sgltest_outpath[MAX_OSPATH];
 int			sgltest_frames = 30;
 #define		SGLTEST_FIXED_DT_MS 16
+
+/* =========================================================================
+   VTune / timedemo profiling mode.
+
+   -vtune [mapname=demo1.dm2]
+
+   Normal Q2 main loop (so perf is realistic), but:
+     * cvars pre-configured for SGL + windowed + timedemo
+     * +map <mapname> injected so the demo starts immediately
+     * After demo playback completes, auto-quits so VTune collection
+       ends cleanly without a human clicking anything.
+   Demo-end is detected by watching cls.state: after we've seen it reach
+   ca_active at least once, the first transition back to ca_disconnected
+   means the demo stream ended (before Q2's attract loop can chain to
+   demo2).
+   ========================================================================= */
+
+qboolean	vtune_mode = false;
+char		vtune_mapname[64] = "demo1.dm2";
 
 
 static HANDLE		qwclsemaphore;
@@ -698,6 +718,75 @@ static qboolean SglTest_ParseArgs (void)
 
 /*
 ==================
+VTune_ParseArgs
+
+Scans argv[] for "-vtune [mapname]", extracts the optional map name,
+rewrites argv, synthesizes the +set overrides and a +map command so that
+the normal Q2 main loop enters timedemo playback on the named demo.
+Default map is demo1.dm2 (ships in stock baseq2/pak0).
+==================
+*/
+static qboolean VTune_ParseArgs (void)
+{
+	int i, j, consumed;
+
+	for (i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-vtune") != 0)
+			continue;
+
+		consumed = 1;
+		// Optional inline map arg. Reject things that look like another
+		// switch (+foo, -foo) so "-vtune +set x y" still works.
+		if (i + 1 < argc && argv[i+1][0] != '+' && argv[i+1][0] != '-')
+		{
+			strncpy (vtune_mapname, argv[i+1], sizeof(vtune_mapname) - 1);
+			vtune_mapname[sizeof(vtune_mapname) - 1] = '\0';
+			consumed = 2;
+		}
+
+		// Remove our switch from argv.
+		for (j = i; j + consumed < argc; j++)
+			argv[j] = argv[j + consumed];
+		argc -= consumed;
+
+		vtune_mode = true;
+
+		{
+			static const char *overrides[][3] = {
+				{ "vid_ref",        "gl"                   },   // Use ref_gl, not ref_soft.
+				{ "gl_driver",      "SGL.dll"              },   // Force SGL.
+				{ "vid_fullscreen", "0"                    },   // Windowed so VTune can sample without lockups.
+				{ "gl_mode",        "3"                    },   // 640x480 -- consistent surface area.
+				{ "cl_timedemo",    "1"                    },   // Uncap FPS; print timing on demo end.
+				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
+				{ "s_initsound",    "0"                    },   // No audio thread noise in the profile.
+				{ "vid_xpos",       "0"                    },
+				{ "vid_ypos",       "0"                    },
+				{ "gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST" },
+			};
+			int k, n = (int)(sizeof(overrides) / sizeof(overrides[0]));
+			for (k = 0; k < n && argc + 3 <= MAX_NUM_ARGVS; k++)
+			{
+				argv[argc++] = "+set";
+				argv[argc++] = (char *)overrides[k][0];
+				argv[argc++] = (char *)overrides[k][1];
+			}
+			// Kick off the demo immediately (late command, runs after renderer init).
+			if (argc + 2 <= MAX_NUM_ARGVS)
+			{
+				argv[argc++] = "+map";
+				argv[argc++] = vtune_mapname;
+			}
+		}
+
+		return true;
+	}
+	return false;
+}
+
+/*
+==================
 SglTest_Run
 
 Replaces Q2's main message loop when -sgltest is active. Drives exactly
@@ -802,9 +891,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 	ParseCommandLine (lpCmdLine);
 
-	// Intercept -sgltest before Sys_ScanForCD et al — it synthesizes its own
-	// argv additions and mutually excludes normal interactive startup.
+	// Intercept -sgltest / -vtune before Sys_ScanForCD et al — they synthesize
+	// their own argv additions and select alternate startup paths.
 	SglTest_ParseArgs ();
+	VTune_ParseArgs ();
 
 	// if we find the CD, add a +set cddir xxx command line
 	cddir = Sys_ScanForCD ();
@@ -862,6 +952,26 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
 		_controlfp( _PC_24, _MCW_PC );
 		Qcommon_Frame (time);
+
+		if (vtune_mode)
+		{
+			extern client_static_t cls;
+			static qboolean demo_started = false;
+			static int      active_frames = 0;
+			if (cls.state == ca_active)
+			{
+				if (++active_frames >= 5)
+					demo_started = true;
+			}
+			else if (demo_started && cls.state == ca_disconnected)
+			{
+				// Demo stream ended. Quit before the attract loop chains
+				// into demo2. cl_timedemo has already printed its fps
+				// summary by this point.
+				Com_Printf ("[vtune] demo complete, exiting\n");
+				Com_Quit ();
+			}
+		}
 
 		oldtime = newtime;
 	}
