@@ -955,15 +955,19 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 		if (vtune_mode)
 		{
+			// Values from connstate_t in client/client.h. Hardcoded here
+			// because the unity-build ordering doesn't always expose the
+			// enum at this point in the translation unit.
+			enum { VT_CA_DISCONNECTED = 1, VT_CA_ACTIVE = 4 };
 			extern client_static_t cls;
 			static qboolean demo_started = false;
 			static int      active_frames = 0;
-			if (cls.state == ca_active)
+			if ((int)cls.state == VT_CA_ACTIVE)
 			{
 				if (++active_frames >= 5)
 					demo_started = true;
 			}
-			else if (demo_started && cls.state == ca_disconnected)
+			else if (demo_started && (int)cls.state == VT_CA_DISCONNECTED)
 			{
 				// Demo stream ended. Quit before the attract loop chains
 				// into demo2. cl_timedemo has already printed its fps
