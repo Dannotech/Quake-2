@@ -692,7 +692,7 @@ static qboolean SglTest_ParseArgs (void)
 				{ "vid_ref",        "gl"                   },   // Use ref_gl (GL path), not ref_soft.
 				{ "gl_driver",      "SGL.dll"              },   // Force SGL as the GL driver, not opengl32.
 				{ "vid_fullscreen", "0"                    },   // Windowed, fixed size.
-				{ "gl_mode",        "3"                    },   // 640x480, deterministic.
+				{ "gl_mode",        "8"                    },   // 640x480, deterministic.
 				{ "s_initsound",    "0"                    },   // No audio thread.
 				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
 				{ "vid_xpos",       "0"                    },   // Fixed window position.
@@ -755,15 +755,16 @@ static qboolean VTune_ParseArgs (void)
 		{
 			static const char *overrides[][3] = {
 				{ "vid_ref",        "gl"                   },   // Use ref_gl, not ref_soft.
-				{ "gl_driver",      "SGL.dll"              },   // Force SGL.
+				{ "gl_driver",      "SGL2.dll"             },   // Force SGL2 (the active driver; SGL is legacy).
 				{ "vid_fullscreen", "0"                    },   // Windowed so VTune can sample without lockups.
-				{ "gl_mode",        "3"                    },   // 640x480 -- consistent surface area.
-				{ "cl_timedemo",    "1"                    },   // Uncap FPS; print timing on demo end.
+				{ "gl_mode",        "8"                    },   // 1600x1200 -- exercises the rasterizer + texturing more realistically than 640x480.
+				{ "timedemo",       "1"                    },   // Uncap FPS; print timing on demo end. (cvar name is "timedemo", not "cl_timedemo".)
 				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
 				{ "s_initsound",    "0"                    },   // No audio thread noise in the profile.
 				{ "vid_xpos",       "0"                    },
 				{ "vid_ypos",       "0"                    },
 				{ "gl_texturemode", "GL_LINEAR_MIPMAP_NEAREST" },
+				{ "logfile",        "2"                    },   // qconsole.log captures the timedemo fps line with per-print flush (Com_Quit would lose a buffered line at value=1).
 			};
 			int k, n = (int)(sizeof(overrides) / sizeof(overrides[0]));
 			for (k = 0; k < n && argc + 3 <= MAX_NUM_ARGVS; k++)
@@ -949,6 +950,22 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		} while (time < 1);
 //			Con_Printf ("time:%5.2f - %5.2f = %5.2f\n", newtime, oldtime, time);
 
+		// -vtune: pin the per-frame delta to a fixed step so demo playback
+		// is deterministic across runs (for TGA golden-compare and stable
+		// fps measurement). Wall-clock-scoped fps is still meaningful
+		// because we measure wall-clock elapsed time ourselves around
+		// the main loop -- what we CAN'T have is cl.time drifting based
+		// on OS jitter, which would advance the demo by different
+		// amounts run-to-run and mutate rendered pixels.
+		//
+		// 16 ms ~= 62.5 Hz, a natural demo playback cadence; the demo
+		// itself was recorded at 10 Hz (Q2 server tick) so any value in
+		// [10, 33] works -- 16 chosen to keep total run time near the
+		// natural Q2 demo duration (689 frames * 16ms ~= 11s, but with
+		// cl_timedemo 1 that's wall-clock-decoupled; actual run is ~3s).
+		if (vtune_mode)
+			time = 16;
+
 		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
 		_controlfp( _PC_24, _MCW_PC );
 		Qcommon_Frame (time);
@@ -962,16 +979,39 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			extern client_static_t cls;
 			static qboolean demo_started = false;
 			static int      active_frames = 0;
+			static int      vtune_start_ms = 0;
+			static int      vtune_frame_at_start = 0;
+			extern client_state_t cl;
 			if ((int)cls.state == VT_CA_ACTIVE)
 			{
-				if (++active_frames >= 5)
+				if (++active_frames == 5)
+				{
 					demo_started = true;
+					// Take our own reference: timestamp when the demo is
+					// definitely streaming, so the fps we report excludes
+					// level-load time. Q2's own cl_timedemo fps line is
+					// printed via Com_Printf during CL_Disconnect but
+					// sometimes doesn't make it into qconsole.log before
+					// process teardown; a self-contained measurement
+					// removes that dependency.
+					vtune_start_ms       = Sys_Milliseconds ();
+					vtune_frame_at_start = cl.timedemo_frames;
+				}
 			}
 			else if (demo_started && (int)cls.state == VT_CA_DISCONNECTED)
 			{
 				// Demo stream ended. Quit before the attract loop chains
-				// into demo2. cl_timedemo has already printed its fps
-				// summary by this point.
+				// into demo2. Print our own fps measurement to qconsole.log
+				// (line matches Q2's Com_Printf format so downstream
+				// parsers don't have to special-case).
+				int now_ms  = Sys_Milliseconds ();
+				int elapsed = now_ms - vtune_start_ms;
+				int frames  = cl.timedemo_frames - vtune_frame_at_start;
+				if (elapsed > 0 && frames > 0)
+				{
+					Com_Printf ("[vtune] %i frames, %3.1f seconds: %3.1f fps\n",
+						frames, elapsed / 1000.0, frames * 1000.0 / elapsed);
+				}
 				Com_Printf ("[vtune] demo complete, exiting\n");
 				Com_Quit ();
 			}

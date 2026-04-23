@@ -1404,11 +1404,17 @@ void Qcommon_Init (int argc, char **argv)
 	if (setjmp (abortframe) )
 		Sys_Error ("Error during initialization");
 
-	// -sgltest mode: pin the C stdlib RNG before anything seeds it (particle
-	// systems, entity spawn, network jitter all read rand()). Must be the
-	// first determinism hook — any rand() call before this is non-deterministic.
-	if (sgltest_active)
-		srand (42);
+	// -sgltest / -vtune: pin the C stdlib RNG before anything seeds it
+	// (particle systems, entity spawn, network jitter all read rand()).
+	// Must be the first determinism hook — any rand() call before this
+	// is non-deterministic. Needed on -vtune too because the profiling
+	// harness golden-compares captured TGAs across runs and even one
+	// divergent rand() ripples through particle positions/colors.
+	{
+		extern qboolean vtune_mode;
+		if (sgltest_active || vtune_mode)
+			srand (42);
+	}
 
 	z_chain.next = z_chain.prev = &z_chain;
 
