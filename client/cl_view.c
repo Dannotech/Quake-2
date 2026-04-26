@@ -357,10 +357,10 @@ void CL_PrepRefresh (void)
 
 /*
 ====================
-CalcFov
+CalcFovYFromX
 ====================
 */
-float CalcFov (float fov_x, float width, float height)
+float CalcFovYFromX (float fov_x, float width, float height)
 {
 	float	a;
 	float	x;
@@ -375,6 +375,55 @@ float CalcFov (float fov_x, float width, float height)
 	a = a*360/M_PI;
 
 	return a;
+}
+
+/*
+====================
+CalcFovXFromY
+====================
+*/
+float CalcFovXFromY (float fov_y, float width, float height)
+{
+	float	a;
+	float	y;
+
+	if (fov_y < 1 || fov_y > 179)
+		Com_Error (ERR_DROP, "Bad fov: %f", fov_y);
+
+	y = height/tan(fov_y/360*M_PI);
+
+	a = atan (width/y);
+
+	a = a*360/M_PI;
+
+	return a;
+}
+
+/*
+====================
+CalcHorPlusFovX
+====================
+*/
+float CalcHorPlusFovX (float canonical_fov_x, float width, float height)
+{
+	float canonical_fov_y;
+
+	canonical_fov_y = CalcFovYFromX (canonical_fov_x, 4, 3);
+
+	return CalcFovXFromY (canonical_fov_y, width, height);
+}
+
+/*
+====================
+CalcFov
+
+Compatibility wrapper for code that only needs vertical FOV from
+the already-corrected horizontal render FOV.
+====================
+*/
+float CalcFov (float fov_x, float width, float height)
+{
+	return CalcFovYFromX (fov_x, width, height);
 }
 
 //============================================================================
@@ -503,7 +552,8 @@ void V_RenderView( float stereo_separation )
 		cl.refdef.y = scr_vrect.y;
 		cl.refdef.width = scr_vrect.width;
 		cl.refdef.height = scr_vrect.height;
-		cl.refdef.fov_y = CalcFov (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
+		cl.refdef.fov_x = CalcHorPlusFovX (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
+		cl.refdef.fov_y = CalcFovYFromX (cl.refdef.fov_x, cl.refdef.width, cl.refdef.height);
 		cl.refdef.time = cl.time*0.001;
 
 		cl.refdef.areabits = cl.frame.areabits;

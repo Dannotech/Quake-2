@@ -3768,7 +3768,8 @@ qboolean PlayerConfig_MenuInit( void )
 
 void PlayerConfig_MenuDraw( void )
 {
-	extern float CalcFov( float fov_x, float w, float h );
+	extern float CalcFovYFromX( float fov_x, float w, float h );
+	extern float CalcHorPlusFovX( float canonical_fov_x, float w, float h );
 	refdef_t refdef;
 	char scratch[MAX_QPATH];
 
@@ -3778,8 +3779,8 @@ void PlayerConfig_MenuDraw( void )
 	refdef.y = viddef.height / 2 - 72;
 	refdef.width = 144;
 	refdef.height = 168;
-	refdef.fov_x = 40;
-	refdef.fov_y = CalcFov( refdef.fov_x, refdef.width, refdef.height );
+	refdef.fov_x = CalcHorPlusFovX( 40, refdef.width, refdef.height );
+	refdef.fov_y = CalcFovYFromX( refdef.fov_x, refdef.width, refdef.height );
 	refdef.time = cls.realtime*0.001;
 
 	if ( s_pmi[s_player_model_box.curvalue].skindisplaynames )
