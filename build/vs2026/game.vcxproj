@@ -139,38 +139,87 @@
     <ClCompile Include="..\..\game\g_turret.c" />
     <ClCompile Include="..\..\game\g_utils.c" />
     <ClCompile Include="..\..\game\g_weapon.c" />
-    <!-- Monster AI -->
-    <ClCompile Include="..\..\game\m_actor.c" />
-    <ClCompile Include="..\..\game\m_berserk.c" />
-    <ClCompile Include="..\..\game\m_boss2.c" />
-    <ClCompile Include="..\..\game\m_boss3.c" />
-    <ClCompile Include="..\..\game\m_boss31.c" />
-    <!-- m_boss31.c has 'extern SP_monster_makron(edict_t*)' (implicit int), while
-         m_boss32.c defines 'void SP_monster_makron' — C2371 in same unity TU -->
+    <!-- Monster AI.
+         Each m_<monster>.c pulls in its own m_<monster>.h, which is a ModelGen-
+         generated header that defines FRAME_* / MODEL_SCALE macros with values
+         specific to that monster's animation. The same macro names (e.g.
+         FRAME_pain204, MODEL_SCALE) appear in multiple headers with different
+         values — which is correct per-TU, but causes C4005 redefinition warnings
+         when unity-build lumps several monsters into one TU. We therefore
+         exclude every monster .c file that includes its own frame header from
+         the unity file so each header stays scoped to a single TU.
+         m_flash.c and m_move.c include no monster header and remain in unity. -->
+    <ClCompile Include="..\..\game\m_actor.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_berserk.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_boss2.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_boss3.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_boss31.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
     <ClCompile Include="..\..\game\m_boss32.c">
       <IncludeInUnityFile>false</IncludeInUnityFile>
     </ClCompile>
-    <ClCompile Include="..\..\game\m_brain.c" />
-    <ClCompile Include="..\..\game\m_chick.c" />
+    <ClCompile Include="..\..\game\m_brain.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_chick.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
     <!-- m_flash.c only includes q_shared.h, not g_local.h — no PCH trigger -->
     <ClCompile Include="..\..\game\m_flash.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\game\m_flipper.c" />
-    <ClCompile Include="..\..\game\m_float.c" />
-    <ClCompile Include="..\..\game\m_flyer.c" />
-    <ClCompile Include="..\..\game\m_gladiator.c" />
-    <ClCompile Include="..\..\game\m_gunner.c" />
-    <ClCompile Include="..\..\game\m_hover.c" />
-    <ClCompile Include="..\..\game\m_infantry.c" />
-    <ClCompile Include="..\..\game\m_insane.c" />
-    <ClCompile Include="..\..\game\m_medic.c" />
+    <ClCompile Include="..\..\game\m_flipper.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_float.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_flyer.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_gladiator.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_gunner.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_hover.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_infantry.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_insane.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_medic.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
     <ClCompile Include="..\..\game\m_move.c" />
-    <ClCompile Include="..\..\game\m_mutant.c" />
-    <ClCompile Include="..\..\game\m_parasite.c" />
-    <ClCompile Include="..\..\game\m_soldier.c" />
-    <ClCompile Include="..\..\game\m_supertank.c" />
-    <ClCompile Include="..\..\game\m_tank.c" />
+    <ClCompile Include="..\..\game\m_mutant.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_parasite.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_soldier.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_supertank.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
+    <ClCompile Include="..\..\game\m_tank.c">
+      <IncludeInUnityFile>false</IncludeInUnityFile>
+    </ClCompile>
     <!-- Player -->
     <ClCompile Include="..\..\game\p_client.c" />
     <ClCompile Include="..\..\game\p_hud.c" />

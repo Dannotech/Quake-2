@@ -121,6 +121,11 @@ qboolean	NET_CompareAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	// NA_BROADCAST and NA_BROADCAST_IPX are write-only destination types and
+	// aren't meaningful to compare — report inequality rather than fall off.
+	Com_Printf ("NET_CompareAdr: bad address type\n");
+	return false;
 }
 
 /*
@@ -151,6 +156,9 @@ qboolean	NET_CompareBaseAdr (netadr_t a, netadr_t b)
 			return true;
 		return false;
 	}
+
+	Com_Printf ("NET_CompareBaseAdr: bad address type\n");
+	return false;
 }
 
 char	*NET_AdrToString (netadr_t a)

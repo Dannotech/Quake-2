@@ -19,7 +19,7 @@ TURB_TEX_SIZE	equ		64
 CYCLE	equ		128
 
 ; !!! if this is changed, it must be changed in r_shared.h too !!!
-MAXHEIGHT	equ		1024
+MAXHEIGHT	equ		4320
 
 ; !!! if this is changed, it must be changed in quakedef.h too !!!
 CACHE_SIZE	equ		32

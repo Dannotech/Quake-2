@@ -32,6 +32,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <conio.h>
 #include "../win32/conproc.h"
 
+#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((DPI_AWARENESS_CONTEXT)-4)
+#endif
+
+#ifndef PROCESS_PER_MONITOR_DPI_AWARE
+typedef enum PROCESS_DPI_AWARENESS {
+	PROCESS_DPI_UNAWARE = 0,
+	PROCESS_SYSTEM_DPI_AWARE = 1,
+	PROCESS_PER_MONITOR_DPI_AWARE = 2
+} PROCESS_DPI_AWARENESS;
+#endif
+
 #define MINIMUM_WIN_MEMORY	0x0a00000
 #define MAXIMUM_WIN_MEMORY	0x1000000
 
@@ -89,6 +102,52 @@ int			sgltest_frames = 30;
 qboolean	vtune_mode = false;
 char		vtune_mapname[64] = "demo1.dm2";
 
+static void Sys_EnableDpiAwareness (void)
+{
+	HMODULE user32;
+	HMODULE shcore;
+	BOOL (WINAPI *setProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+	HRESULT (WINAPI *setProcessDpiAwareness)(PROCESS_DPI_AWARENESS);
+	BOOL (WINAPI *setProcessDPIAware)(void);
+
+	user32 = LoadLibraryA ("user32.dll");
+	if (user32)
+	{
+		setProcessDpiAwarenessContext = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT))
+			GetProcAddress (user32, "SetProcessDpiAwarenessContext");
+		if (setProcessDpiAwarenessContext &&
+			setProcessDpiAwarenessContext (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+		{
+			FreeLibrary (user32);
+			return;
+		}
+	}
+
+	shcore = LoadLibraryA ("shcore.dll");
+	if (shcore)
+	{
+		setProcessDpiAwareness = (HRESULT (WINAPI *)(PROCESS_DPI_AWARENESS))
+			GetProcAddress (shcore, "SetProcessDpiAwareness");
+		if (setProcessDpiAwareness &&
+			SUCCEEDED (setProcessDpiAwareness (PROCESS_PER_MONITOR_DPI_AWARE)))
+		{
+			FreeLibrary (shcore);
+			if (user32)
+				FreeLibrary (user32);
+			return;
+		}
+		FreeLibrary (shcore);
+	}
+
+	if (user32)
+	{
+		setProcessDPIAware = (BOOL (WINAPI *)(void))
+			GetProcAddress (user32, "SetProcessDPIAware");
+		if (setProcessDPIAware)
+			setProcessDPIAware ();
+		FreeLibrary (user32);
+	}
+}
 
 static HANDLE		qwclsemaphore;
 
@@ -887,6 +946,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     /* previous instances do not exist in Win32 */
     if (hPrevInstance)
         return 0;
+
+	Sys_EnableDpiAwareness ();
 
 	global_hInstance = hInstance;
 
