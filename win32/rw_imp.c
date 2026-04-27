@@ -409,8 +409,9 @@ void Sys_MakeCodeWriteable (unsigned long startaddr, unsigned long length)
 {
 	DWORD  flOldProtect;
 
-	if (!VirtualProtect((LPVOID)startaddr, length, PAGE_READWRITE, &flOldProtect))
- 		ri.Sys_Error(ERR_FATAL, "Protection change failed\n");
+	if (!VirtualProtect((LPVOID)startaddr, length, PAGE_EXECUTE_READWRITE, &flOldProtect))
+		ri.Sys_Error(ERR_FATAL, "Protection change failed\n");
+	FlushInstructionCache(GetCurrentProcess(), (LPCVOID)startaddr, length);
 }
 
 /*
