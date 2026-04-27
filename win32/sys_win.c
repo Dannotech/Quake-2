@@ -816,7 +816,6 @@ static qboolean VTune_ParseArgs (void)
 				{ "vid_ref",        "gl"                   },   // Use ref_gl, not ref_soft.
 				{ "gl_driver",      "SGL2.dll"             },   // Force SGL2 (the active driver; SGL is legacy).
 				{ "vid_fullscreen", "0"                    },   // Windowed so VTune can sample without lockups.
-				{ "gl_mode",        "8"                    },   // 1600x1200 -- exercises the rasterizer + texturing more realistically than 640x480.
 				{ "timedemo",       "1"                    },   // Uncap FPS; print timing on demo end. (cvar name is "timedemo", not "cl_timedemo".)
 				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
 				{ "s_initsound",    "0"                    },   // No audio thread noise in the profile.
