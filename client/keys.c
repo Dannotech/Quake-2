@@ -743,6 +743,9 @@ void Key_Event (int key, qboolean down, unsigned time)
 	char	*kb;
 	char	cmd[1024];
 
+	if (CL_AttractLockActive())
+		return;
+
 	// hack for modal presses
 	if (key_waiting == -1)
 	{

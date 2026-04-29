@@ -44,6 +44,34 @@ glwstate_t glw_state;
 extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_ref;
 
+static void VID_CenterWindowRect( RECT *r, int clientWidth, int clientHeight )
+{
+	RECT desktop;
+	int windowWidth;
+	int windowHeight;
+	int clientLeftOffset;
+	int clientTopOffset;
+	int clientX;
+	int clientY;
+
+	desktop.left = 0;
+	desktop.top = 0;
+	desktop.right = GetSystemMetrics( SM_CXSCREEN );
+	desktop.bottom = GetSystemMetrics( SM_CYSCREEN );
+	clientLeftOffset = -r->left;
+	clientTopOffset = -r->top;
+	windowWidth = r->right - r->left;
+	windowHeight = r->bottom - r->top;
+
+	clientX = desktop.left + ( ( desktop.right - desktop.left ) - clientWidth ) / 2;
+	clientY = desktop.top + ( ( desktop.bottom - desktop.top ) - clientHeight ) / 2;
+
+	r->left = clientX - clientLeftOffset;
+	r->top = clientY - clientTopOffset;
+	r->right = r->left + windowWidth;
+	r->bottom = r->top + windowHeight;
+}
+
 static qboolean VerifyDriver( void )
 {
 	char buffer[1024];
@@ -65,7 +93,6 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 {
 	WNDCLASS		wc;
 	RECT			r;
-	cvar_t			*vid_xpos, *vid_ypos;
 	int				stylebits;
 	int				x, y, w, h;
 	int				exstyle;
@@ -102,6 +129,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	r.bottom = height;
 
 	AdjustWindowRect (&r, stylebits, FALSE);
+	if (!fullscreen)
+		VID_CenterWindowRect (&r, width, height);
 
 	w = r.right - r.left;
 	h = r.bottom - r.top;
@@ -113,10 +142,8 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	}
 	else
 	{
-		vid_xpos = ri.Cvar_Get ("vid_xpos", "0", 0);
-		vid_ypos = ri.Cvar_Get ("vid_ypos", "0", 0);
-		x = vid_xpos->value;
-		y = vid_ypos->value;
+		x = r.left;
+		y = r.top;
 	}
 
 	glw_state.hWnd = CreateWindowEx (

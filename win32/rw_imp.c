@@ -33,6 +33,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "rw_win.h"
 #include "winquake.h"
 
+static void VID_CenterWindowRect( RECT *r, int clientWidth, int clientHeight )
+{
+	RECT desktop;
+	int windowWidth;
+	int windowHeight;
+	int clientLeftOffset;
+	int clientTopOffset;
+	int clientX;
+	int clientY;
+
+	desktop.left = 0;
+	desktop.top = 0;
+	desktop.right = GetSystemMetrics( SM_CXSCREEN );
+	desktop.bottom = GetSystemMetrics( SM_CYSCREEN );
+	clientLeftOffset = -r->left;
+	clientTopOffset = -r->top;
+	windowWidth = r->right - r->left;
+	windowHeight = r->bottom - r->top;
+
+	clientX = desktop.left + ( ( desktop.right - desktop.left ) - clientWidth ) / 2;
+	clientY = desktop.top + ( ( desktop.bottom - desktop.top ) - clientHeight ) / 2;
+
+	r->left = clientX - clientLeftOffset;
+	r->top = clientY - clientTopOffset;
+	r->right = r->left + windowWidth;
+	r->bottom = r->top + windowHeight;
+}
+
 // Console variables that we need to access from this module
 
 swwstate_t sww_state;
@@ -46,12 +74,10 @@ void VID_CreateWindow( int width, int height, int stylebits )
 {
 	WNDCLASS		wc;
 	RECT			r;
-	cvar_t			*vid_xpos, *vid_ypos, *vid_fullscreen;
+	cvar_t			*vid_fullscreen;
 	int				x, y, w, h;
 	int				exstyle;
 
-	vid_xpos = ri.Cvar_Get ("vid_xpos", "0", 0);
-	vid_ypos = ri.Cvar_Get ("vid_ypos", "0", 0);
 	vid_fullscreen = ri.Cvar_Get ("vid_fullscreen", "0", CVAR_ARCHIVE );
 
 	if ( vid_fullscreen->value )
@@ -80,11 +106,13 @@ void VID_CreateWindow( int width, int height, int stylebits )
 	r.bottom = height;
 
 	AdjustWindowRect (&r, stylebits, FALSE);
+	if ( !vid_fullscreen->value )
+		VID_CenterWindowRect (&r, width, height);
 
 	w = r.right - r.left;
 	h = r.bottom - r.top;
-	x = vid_xpos->value;
-	y = vid_ypos->value;
+	x = r.left;
+	y = r.top;
 
 	sww_state.hWnd = CreateWindowEx (
 		exstyle,

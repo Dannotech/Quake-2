@@ -241,7 +241,10 @@ int MapKey (int key)
 
 void AppActivate(BOOL fActive, BOOL minimize)
 {
+	qboolean demoLock;
+
 	Minimized = minimize;
+	demoLock = CL_AttractLockActive();
 
 	Key_ClearStates();
 
@@ -255,8 +258,16 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	if (!ActiveApp)
 	{
 		IN_Activate (false);
-		CDAudio_Activate (false);
-		S_Activate (false);
+		if (demoLock)
+		{
+			CDAudio_Activate (true);
+			S_Activate (true);
+		}
+		else
+		{
+			CDAudio_Activate (false);
+			S_Activate (false);
+		}
 
 		if ( win_noalttab->value )
 		{
@@ -353,7 +364,7 @@ LONG WINAPI MainWndProc (
 			AppActivate( fActive != WA_INACTIVE, fMinimized);
 
 			if ( reflib_active )
-				re.AppActivate( !( fActive == WA_INACTIVE ) );
+				re.AppActivate( !( fActive == WA_INACTIVE ) || CL_AttractLockActive() );
 		}
         return DefWindowProc (hWnd, uMsg, wParam, lParam);
 
@@ -470,7 +481,6 @@ void VID_Front_f( void )
 	SetWindowLong( cl_hwnd, GWL_EXSTYLE, WS_EX_TOPMOST );
 	SetForegroundWindow( cl_hwnd );
 }
-
 /*
 ** VID_GetModeInfo
 */
@@ -534,7 +544,7 @@ void VID_UpdateWindowPosAndSize( int x, int y )
 	w = r.right - r.left;
 	h = r.bottom - r.top;
 
-	MoveWindow( cl_hwnd, vid_xpos->value, vid_ypos->value, w, h, TRUE );
+	MoveWindow( cl_hwnd, x, y, w, h, TRUE );
 }
 
 /*

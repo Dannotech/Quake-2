@@ -289,6 +289,7 @@ extern	cvar_t	*cl_lightlevel;	// FIXME HACK
 
 extern	cvar_t	*cl_paused;
 extern	cvar_t	*cl_timedemo;
+extern	cvar_t	*cl_attractlock;
 
 extern	cvar_t	*cl_vwep;
 
@@ -322,6 +323,7 @@ void DrawAltString (int x, int y, char *s);	// toggle high bit
 qboolean	CL_CheckOrDownloadFile (char *filename);
 
 void CL_AddNetgraph (void);
+qboolean CL_AttractLockActive (void);
 
 //ROGUE
 typedef struct cl_sustain
