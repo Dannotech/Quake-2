@@ -843,18 +843,21 @@ between a deactivate and an activate.
 */
 void S_Activate (qboolean active)
 {
-	if ( active )
+	if ( pDS && cl_hwnd && snd_isdirect )
 	{
-		if ( pDS && cl_hwnd && snd_isdirect )
+		if ( active )
 		{
-			DS_CreateBuffers();
+			if ( !pDSBuf )
+			{
+				DS_CreateBuffers();
+			}
 		}
-	}
-	else
-	{
-		if ( pDS && cl_hwnd && snd_isdirect )
+		else
 		{
-			DS_DestroyBuffers();
+			if ( pDSBuf )
+			{
+				DS_DestroyBuffers();
+			}
 		}
 	}
 }

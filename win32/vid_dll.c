@@ -258,12 +258,7 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	if (!ActiveApp)
 	{
 		IN_Activate (false);
-		if (demoLock)
-		{
-			CDAudio_Activate (true);
-			S_Activate (true);
-		}
-		else
+		if (!demoLock)
 		{
 			CDAudio_Activate (false);
 			S_Activate (false);
@@ -364,7 +359,7 @@ LONG WINAPI MainWndProc (
 			AppActivate( fActive != WA_INACTIVE, fMinimized);
 
 			if ( reflib_active )
-				re.AppActivate( !( fActive == WA_INACTIVE ) || CL_AttractLockActive() );
+				re.AppActivate( !( fActive == WA_INACTIVE ) );
 		}
         return DefWindowProc (hWnd, uMsg, wParam, lParam);
 
