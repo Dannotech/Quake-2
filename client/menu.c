@@ -1152,7 +1152,7 @@ static void ConsoleFunc( void *unused )
 	*/
 	extern void Key_ClearTyping( void );
 
-	if ( cl.attractloop )
+	if ( cl.attractloop && !CL_AttractLockActive() )
 	{
 		Cbuf_AddText ("killserver\n");
 		return;

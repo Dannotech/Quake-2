@@ -743,9 +743,6 @@ void Key_Event (int key, qboolean down, unsigned time)
 	char	*kb;
 	char	cmd[1024];
 
-	if (CL_AttractLockActive())
-		return;
-
 	// hack for modal presses
 	if (key_waiting == -1)
 	{
@@ -788,7 +785,7 @@ void Key_Event (int key, qboolean down, unsigned time)
 	}
 
 	// any key during the attract mode will bring up the menu
-	if (cl.attractloop && cls.key_dest != key_menu)
+	if (cl.attractloop && !CL_AttractLockActive() && cls.key_dest != key_menu)
 		key = K_ESCAPE;
 
 	// menu key is hardcoded, so the user can never unbind it
