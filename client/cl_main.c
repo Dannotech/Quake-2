@@ -111,8 +111,7 @@ CL_AttractLockEnabled
 */
 qboolean CL_AttractLockEnabled (void)
 {
-	return (cl_attractlock && cl_attractlock->value)
-		|| Cvar_VariableValue ("cl_attractlock");
+	return cl_attractlock && cl_attractlock->value;
 }
 
 /*
@@ -1807,7 +1806,6 @@ void CL_Init (void)
 		return;		// nothing running on the client
 
 	// all archived variables will now be loaded
-	cl_attractlock = Cvar_Get ("cl_attractlock", "0", 0);
 
 	Con_Init ();	
 #if defined __linux__ || defined __sgi

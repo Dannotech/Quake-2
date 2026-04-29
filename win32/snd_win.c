@@ -103,22 +103,20 @@ static qboolean DS_CreateBuffers( void )
 	DSBCAPS			dsbcaps;
 	WAVEFORMATEX	pformat, format;
 	DWORD			dwWrite;
-	qboolean		attractLock;
 
 	memset (&format, 0, sizeof(format));
 	format.wFormatTag = WAVE_FORMAT_PCM;
     format.nChannels = dma.channels;
     format.wBitsPerSample = dma.samplebits;
     format.nSamplesPerSec = dma.speed;
-	format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
+    format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
     format.cbSize = 0;
     format.nAvgBytesPerSec = format.nSamplesPerSec*format.nBlockAlign; 
-	attractLock = Cvar_VariableValue( "cl_attractlock" ) != 0;
 
 	Com_Printf( "Creating DS buffers\n" );
 
-	Com_DPrintf("...setting %s coop level: ", attractLock ? "PRIORITY" : "EXCLUSIVE" );
-	if ( DS_OK != pDS->lpVtbl->SetCooperativeLevel( pDS, cl_hwnd, attractLock ? DSSCL_PRIORITY : DSSCL_EXCLUSIVE ) )
+	Com_DPrintf("...setting EXCLUSIVE coop level: " );
+	if ( DS_OK != pDS->lpVtbl->SetCooperativeLevel( pDS, cl_hwnd, DSSCL_EXCLUSIVE ) )
 	{
 		Com_Printf ("failed\n");
 		FreeSound ();
@@ -160,13 +158,13 @@ static qboolean DS_CreateBuffers( void )
 	else
 		Com_Printf( "failed\n" );
 
-	if ( attractLock || !primary_format_set || !s_primary->value)
+	if ( !primary_format_set || !s_primary->value)
 	{
 	// create the secondary buffer we'll actually work with
 		memset (&dsbuf, 0, sizeof(dsbuf));
 		dsbuf.dwSize = sizeof(DSBUFFERDESC);
 		dsbuf.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_LOCSOFTWARE;
-		if ( attractLock )
+		if ( Cvar_VariableValue( "cl_attractlock" ) )
 			dsbuf.dwFlags |= DSBCAPS_GLOBALFOCUS;
 		dsbuf.dwBufferBytes = SECONDARY_BUFFER_SIZE;
 		dsbuf.lpwfxFormat = &format;
