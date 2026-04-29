@@ -429,15 +429,12 @@ void IN_Frame (void)
 	}
 
 	if ( !cl.refresh_prepped
+		|| CL_AttractLockActive()
 		|| cls.key_dest == key_console
 		|| cls.key_dest == key_menu)
 	{
-		// temporarily deactivate if in fullscreen
-		if (Cvar_VariableValue ("vid_fullscreen") == 0)
-		{
-			IN_DeactivateMouse ();
-			return;
-		}
+		IN_DeactivateMouse ();
+		return;
 	}
 
 	IN_ActivateMouse ();
