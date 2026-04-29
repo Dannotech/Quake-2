@@ -106,12 +106,22 @@ extern	cvar_t *allow_download_maps;
 
 /*
 =================
+CL_AttractLockEnabled
+=================
+*/
+qboolean CL_AttractLockEnabled (void)
+{
+	return cl_attractlock && cl_attractlock->value;
+}
+
+/*
+=================
 CL_AttractLockActive
 =================
 */
 qboolean CL_AttractLockActive (void)
 {
-	return cl_attractlock && cl_attractlock->value && cl.attractloop;
+	return CL_AttractLockEnabled() && cl.attractloop;
 }
 
 

@@ -323,6 +323,7 @@ void DrawAltString (int x, int y, char *s);	// toggle high bit
 qboolean	CL_CheckOrDownloadFile (char *filename);
 
 void CL_AddNetgraph (void);
+qboolean CL_AttractLockEnabled (void);
 qboolean CL_AttractLockActive (void);
 
 //ROGUE

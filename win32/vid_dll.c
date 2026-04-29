@@ -241,10 +241,7 @@ int MapKey (int key)
 
 void AppActivate(BOOL fActive, BOOL minimize)
 {
-	qboolean demoLock;
-
 	Minimized = minimize;
-	demoLock = CL_AttractLockActive();
 
 	Key_ClearStates();
 
@@ -258,7 +255,7 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	if (!ActiveApp)
 	{
 		IN_Activate (false);
-		if (!demoLock)
+		if (!CL_AttractLockEnabled())
 		{
 			CDAudio_Activate (false);
 			S_Activate (false);
