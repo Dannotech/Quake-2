@@ -164,8 +164,6 @@ static qboolean DS_CreateBuffers( void )
 		memset (&dsbuf, 0, sizeof(dsbuf));
 		dsbuf.dwSize = sizeof(DSBUFFERDESC);
 		dsbuf.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_LOCSOFTWARE;
-		if ( Cvar_VariableValue( "cl_attractlock" ) )
-			dsbuf.dwFlags |= DSBCAPS_GLOBALFOCUS;
 		dsbuf.dwBufferBytes = SECONDARY_BUFFER_SIZE;
 		dsbuf.lpwfxFormat = &format;
 
