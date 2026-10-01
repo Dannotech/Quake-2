@@ -120,7 +120,8 @@ void VID_Printf (int print_level, char *fmt, ...)
 	static qboolean	inupdate;
 	
 	va_start (argptr,fmt);
-	vsprintf (msg,fmt,argptr);
+	// Modern GPU extension lists can exceed the original console buffer.
+	vsnprintf (msg, sizeof(msg), fmt, argptr);
 	va_end (argptr);
 
 	if (print_level == PRINT_ALL)
