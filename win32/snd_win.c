@@ -164,6 +164,8 @@ static qboolean DS_CreateBuffers( void )
 		memset (&dsbuf, 0, sizeof(dsbuf));
 		dsbuf.dwSize = sizeof(DSBUFFERDESC);
 		dsbuf.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_LOCSOFTWARE;
+		if ( Cvar_VariableValue( "cl_attractlock" ) )
+			dsbuf.dwFlags |= DSBCAPS_GLOBALFOCUS;
 		dsbuf.dwBufferBytes = SECONDARY_BUFFER_SIZE;
 		dsbuf.lpwfxFormat = &format;
 
@@ -843,18 +845,21 @@ between a deactivate and an activate.
 */
 void S_Activate (qboolean active)
 {
-	if ( active )
+	if ( pDS && cl_hwnd && snd_isdirect )
 	{
-		if ( pDS && cl_hwnd && snd_isdirect )
+		if ( active )
 		{
-			DS_CreateBuffers();
+			if ( !pDSBuf )
+			{
+				DS_CreateBuffers();
+			}
 		}
-	}
-	else
-	{
-		if ( pDS && cl_hwnd && snd_isdirect )
+		else
 		{
-			DS_DestroyBuffers();
+			if ( pDSBuf )
+			{
+				DS_DestroyBuffers();
+			}
 		}
 	}
 }

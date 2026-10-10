@@ -256,8 +256,11 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	if (!ActiveApp)
 	{
 		IN_Activate (false);
-		CDAudio_Activate (false);
-		S_Activate (false);
+		if (!CL_AttractLockEnabled())
+		{
+			CDAudio_Activate (false);
+			S_Activate (false);
+		}
 
 		if ( win_noalttab->value )
 		{
@@ -471,7 +474,6 @@ void VID_Front_f( void )
 	SetWindowLong( cl_hwnd, GWL_EXSTYLE, WS_EX_TOPMOST );
 	SetForegroundWindow( cl_hwnd );
 }
-
 /*
 ** VID_GetModeInfo
 */
@@ -535,7 +537,7 @@ void VID_UpdateWindowPosAndSize( int x, int y )
 	w = r.right - r.left;
 	h = r.bottom - r.top;
 
-	MoveWindow( cl_hwnd, vid_xpos->value, vid_ypos->value, w, h, TRUE );
+	MoveWindow( cl_hwnd, x, y, w, h, TRUE );
 }
 
 /*

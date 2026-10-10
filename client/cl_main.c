@@ -59,6 +59,7 @@ cvar_t	*cl_showclamp;
 
 cvar_t	*cl_paused;
 cvar_t	*cl_timedemo;
+cvar_t	*cl_attractlock;
 
 cvar_t	*lookspring;
 cvar_t	*lookstrafe;
@@ -101,6 +102,27 @@ extern	cvar_t *allow_download_sounds;
 extern	cvar_t *allow_download_maps;
 
 //======================================================================
+
+
+/*
+=================
+CL_AttractLockEnabled
+=================
+*/
+qboolean CL_AttractLockEnabled (void)
+{
+	return cl_attractlock && cl_attractlock->value;
+}
+
+/*
+=================
+CL_AttractLockActive
+=================
+*/
+qboolean CL_AttractLockActive (void)
+{
+	return CL_AttractLockEnabled() && cl.attractloop;
+}
 
 
 /*
@@ -1462,6 +1484,7 @@ void CL_InitLocal (void)
 	cl_timeout = Cvar_Get ("cl_timeout", "120", 0);
 	cl_paused = Cvar_Get ("paused", "0", 0);
 	cl_timedemo = Cvar_Get ("timedemo", "0", 0);
+	cl_attractlock = Cvar_Get ("cl_attractlock", "0", 0);
 
 	rcon_client_password = Cvar_Get ("rcon_password", "", 0);
 	rcon_address = Cvar_Get ("rcon_address", "", 0);
