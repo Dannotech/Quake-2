@@ -35,6 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../ref_gl/gl_local.h"
 #include "glw_win.h"
 #include "winquake.h"
+#include "window_layout.h"
 
 static qboolean GLimp_SwitchFullscreen( int width, int height );
 qboolean GLimp_InitGL (void);
@@ -44,32 +45,39 @@ glwstate_t glw_state;
 extern cvar_t *vid_fullscreen;
 extern cvar_t *vid_ref;
 
-static void VID_CenterWindowRect( RECT *r, int clientWidth, int clientHeight )
+/* Physical placement is independent of vid.width/height (the GL viewport). */
+static HMONITOR windowMonitor;
+static qboolean borderlessFullscreen;
+
+static MONITORINFO VID_WindowMonitor(void)
 {
-	RECT desktop;
-	int windowWidth;
-	int windowHeight;
-	int clientLeftOffset;
-	int clientTopOffset;
-	int clientX;
-	int clientY;
+	MONITORINFO info;
+	POINT origin = {0, 0};
+	info.cbSize = sizeof(info);
+	if (!windowMonitor || !GetMonitorInfo(windowMonitor, &info)) {
+		windowMonitor = MonitorFromPoint(origin, MONITOR_DEFAULTTOPRIMARY);
+		GetMonitorInfo(windowMonitor, &info);
+	}
+	return info;
+}
 
-	desktop.left = 0;
-	desktop.top = 0;
-	desktop.right = GetSystemMetrics( SM_CXSCREEN );
-	desktop.bottom = GetSystemMetrics( SM_CYSCREEN );
-	clientLeftOffset = -r->left;
-	clientTopOffset = -r->top;
-	windowWidth = r->right - r->left;
-	windowHeight = r->bottom - r->top;
-
-	clientX = desktop.left + ( ( desktop.right - desktop.left ) - clientWidth ) / 2;
-	clientY = desktop.top + ( ( desktop.bottom - desktop.top ) - clientHeight ) / 2;
-
-	r->left = clientX - clientLeftOffset;
-	r->top = clientY - clientTopOffset;
-	r->right = r->left + windowWidth;
-	r->bottom = r->top + windowHeight;
+static RECT VID_WindowFrame(DWORD style, DWORD exstyle)
+{
+	RECT frame = {0, 0, 0, 0};
+	UINT dpiX = 96, dpiY = 96;
+	HMODULE shcore = LoadLibraryA("shcore.dll");
+	HMODULE user32 = GetModuleHandleA("user32.dll");
+	HRESULT (WINAPI *getMonitorDpi)(HMONITOR, int, UINT *, UINT *);
+	BOOL (WINAPI *adjustForDpi)(LPRECT, DWORD, BOOL, DWORD, UINT);
+	getMonitorDpi = shcore ? (HRESULT (WINAPI *)(HMONITOR, int, UINT *, UINT *))
+		GetProcAddress(shcore, "GetDpiForMonitor") : NULL;
+	adjustForDpi = (BOOL (WINAPI *)(LPRECT, DWORD, BOOL, DWORD, UINT))
+		GetProcAddress(user32, "AdjustWindowRectExForDpi");
+	if (getMonitorDpi) getMonitorDpi(windowMonitor, 0, &dpiX, &dpiY);
+	if (!adjustForDpi || !adjustForDpi(&frame, style, FALSE, exstyle, dpiX))
+		AdjustWindowRectEx(&frame, style, FALSE, exstyle);
+	if (shcore) FreeLibrary(shcore);
+	return frame;
 }
 
 static qboolean VerifyDriver( void )
@@ -96,6 +104,7 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	int				stylebits;
 	int				x, y, w, h;
 	int				exstyle;
+	MONITORINFO monitor = VID_WindowMonitor();
 
 	/* Register the frame class */
     wc.style         = 0;
@@ -123,28 +132,20 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 		stylebits = WINDOW_STYLE;
 	}
 
-	r.left = 0;
-	r.top = 0;
-	r.right  = width;
-	r.bottom = height;
-
-	AdjustWindowRect (&r, stylebits, FALSE);
-	if (!fullscreen)
-		VID_CenterWindowRect (&r, width, height);
-
+	if (fullscreen) {
+		r = monitor.rcMonitor;
+		if (!borderlessFullscreen) {
+			r.right = r.left + width;
+			r.bottom = r.top + height;
+		}
+	} else {
+		RECT frame = VID_WindowFrame(stylebits, exstyle);
+		r = VID_FitWindowRect(monitor.rcWork, frame, width, height);
+	}
+	x = r.left;
+	y = r.top;
 	w = r.right - r.left;
 	h = r.bottom - r.top;
-
-	if (fullscreen)
-	{
-		x = 0;
-		y = 0;
-	}
-	else
-	{
-		x = r.left;
-		y = r.top;
-	}
 
 	glw_state.hWnd = CreateWindowEx (
 		 exstyle, 
@@ -173,7 +174,15 @@ qboolean VID_CreateWindow( int width, int height, qboolean fullscreen )
 	SetForegroundWindow( glw_state.hWnd );
 	SetFocus( glw_state.hWnd );
 
-	// let the sound and input subsystems know about the new window
+	{
+		RECT client;
+		GetClientRect(glw_state.hWnd, &client);
+		ri.Con_Printf(PRINT_ALL, "...render %dx%d, window client %ldx%ld at %d,%d%s\n",
+			width, height, client.right, client.bottom, x, y,
+			borderlessFullscreen ? " (borderless fullscreen)" : "");
+	}
+
+	// Preserve logical render dimensions; input queries the physical HWND.
 	ri.Vid_NewWindow (width, height);
 
 	return true;
@@ -200,11 +209,23 @@ rserr_t GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen 
 
 	ri.Con_Printf( PRINT_ALL, " %d %d %s\n", width, height, win_fs[fullscreen] );
 
+	// Retain the monitor when changing modes; negative desktop origins are valid.
+	if (glw_state.hWnd) {
+		windowMonitor = MonitorFromWindow(glw_state.hWnd, MONITOR_DEFAULTTOPRIMARY);
+	} else {
+		POINT position;
+		position.x = (LONG)ri.Cvar_Get("vid_xpos", "3", CVAR_ARCHIVE)->value;
+		position.y = (LONG)ri.Cvar_Get("vid_ypos", "22", CVAR_ARCHIVE)->value;
+		windowMonitor = MonitorFromPoint(position, MONITOR_DEFAULTTONEAREST);
+	}
+
 	// destroy the existing window
 	if (glw_state.hWnd)
 	{
 		GLimp_Shutdown ();
 	}
+
+	borderlessFullscreen = false;
 
 	// do a CDS if needed
 	if ( fullscreen )
@@ -244,6 +265,8 @@ rserr_t GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen 
 			*pheight = height;
 
 			gl_state.fullscreen = true;
+			// ChangeDisplaySettings targets the primary display.
+			windowMonitor = MonitorFromWindow(NULL, MONITOR_DEFAULTTOPRIMARY);
 
 			ri.Con_Printf( PRINT_ALL, "ok\n" );
 
@@ -279,20 +302,26 @@ rserr_t GLimp_SetMode( int *pwidth, int *pheight, int mode, qboolean fullscreen 
 			{
 				ri.Con_Printf( PRINT_ALL, " failed\n" );
 
-				ri.Con_Printf( PRINT_ALL, "...setting windowed mode\n" );
+				ri.Con_Printf( PRINT_ALL, "...using desktop fallback\n" );
 
 				ChangeDisplaySettings( 0, 0 );
 
 				*pwidth = width;
 				*pheight = height;
-				gl_state.fullscreen = false;
-				if ( !VID_CreateWindow (width, height, false) )
+				{
+					MONITORINFO monitor = VID_WindowMonitor();
+					borderlessFullscreen = width > monitor.rcMonitor.right - monitor.rcMonitor.left ||
+						height > monitor.rcMonitor.bottom - monitor.rcMonitor.top;
+				}
+				gl_state.fullscreen = borderlessFullscreen;
+				if ( !VID_CreateWindow (width, height, borderlessFullscreen) )
 					return rserr_invalid_mode;
-				return rserr_invalid_fullscreen;
+				return borderlessFullscreen ? rserr_ok : rserr_invalid_fullscreen;
 			}
 			else
 			{
 				ri.Con_Printf( PRINT_ALL, " ok\n" );
+				windowMonitor = MonitorFromWindow(NULL, MONITOR_DEFAULTTOPRIMARY);
 				if ( !VID_CreateWindow (width, height, true) )
 					return rserr_invalid_mode;
 
@@ -358,9 +387,10 @@ void GLimp_Shutdown( void )
 
 	if ( gl_state.fullscreen )
 	{
-		ChangeDisplaySettings( 0, 0 );
+		if (!borderlessFullscreen) ChangeDisplaySettings( 0, 0 );
 		gl_state.fullscreen = false;
 	}
+	borderlessFullscreen = false;
 }
 
 

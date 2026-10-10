@@ -522,22 +522,9 @@ qboolean VID_GetModeInfo( int *width, int *height, int mode )
 */
 void VID_UpdateWindowPosAndSize( int x, int y )
 {
-	RECT r;
-	int		style;
-	int		w, h;
-
-	r.left   = 0;
-	r.top    = 0;
-	r.right  = viddef.width;
-	r.bottom = viddef.height;
-
-	style = GetWindowLong( cl_hwnd, GWL_STYLE );
-	AdjustWindowRect( &r, style, FALSE );
-
-	w = r.right - r.left;
-	h = r.bottom - r.top;
-
-	MoveWindow( cl_hwnd, x, y, w, h, TRUE );
+	// The refresh module owns physical sizing; viddef is the logical render size.
+	SetWindowPos(cl_hwnd, NULL, x, y, 0, 0,
+		SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 /*

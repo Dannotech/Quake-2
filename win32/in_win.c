@@ -142,7 +142,6 @@ Called when the window gains focus or changes in some way
 */
 void IN_ActivateMouse (void)
 {
-	int		width, height;
 
 	if (!mouseinitialized)
 		return;
@@ -154,23 +153,26 @@ void IN_ActivateMouse (void)
 	if (mouseactive)
 		return;
 
-	mouseactive = true;
+	// Capture the visible client area, including monitors with negative origins.
+	{
+		RECT client, desktop;
+		POINT corners[2];
+		if (!GetClientRect(cl_hwnd, &client)) return;
+		corners[0].x = client.left; corners[0].y = client.top;
+		corners[1].x = client.right; corners[1].y = client.bottom;
+		MapWindowPoints(cl_hwnd, NULL, corners, 2);
+		client.left = corners[0].x; client.top = corners[0].y;
+		client.right = corners[1].x; client.bottom = corners[1].y;
+		desktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+		desktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
+		desktop.right = desktop.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
+		desktop.bottom = desktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
+		if (!IntersectRect(&window_rect, &client, &desktop)) return;
+	}
 
+	mouseactive = true;
 	if (mouseparmsvalid)
 		restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
-
-	width = GetSystemMetrics (SM_CXSCREEN);
-	height = GetSystemMetrics (SM_CYSCREEN);
-
-	GetWindowRect ( cl_hwnd, &window_rect);
-	if (window_rect.left < 0)
-		window_rect.left = 0;
-	if (window_rect.top < 0)
-		window_rect.top = 0;
-	if (window_rect.right >= width)
-		window_rect.right = width-1;
-	if (window_rect.bottom >= height-1)
-		window_rect.bottom = height-1;
 
 	window_center_x = (window_rect.right + window_rect.left)/2;
 	window_center_y = (window_rect.top + window_rect.bottom)/2;
