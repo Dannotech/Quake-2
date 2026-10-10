@@ -25,6 +25,13 @@ put its PAK files in the output directory's `ctf\` folder and pass `+set game ct
 The loader selects `gamex64.dll` and respects the active mod when checking development paths.
 64-bit engines require 64-bit renderer, game, and GL-driver DLLs (including custom SGL drivers).
 
+Bundled launchers can keep `quake2.exe`, `ref_gl.dll`, and `gamex64.dll` together in a
+separate engine folder and use the installed game folder as the working directory.
+After checking development and game-data paths, the game DLL loader also checks beside
+the executable, or its matching mod subfolder (for example `ctf/gamex64.dll`). This avoids
+copying engine DLLs over an installed x86 game. Release builds use the static C runtime;
+Windows system libraries and an architecture-matching OpenGL driver are still required.
+
 ## Architecture changes
 
 - x64 uses the existing C renderer/math implementations; x86 MASM is excluded.

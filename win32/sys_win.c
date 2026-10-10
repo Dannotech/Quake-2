@@ -586,7 +586,7 @@ Loads the game dll
 void *Sys_GetGameAPI (void *parms)
 {
 	void	*(*GetGameAPI) (void *);
-	char	name[MAX_OSPATH];
+	char	name[MAX_PATH];
 	char	*path;
 	const char *gamedir = Cvar_VariableString ("game");
 	char	cwd[MAX_OSPATH];
@@ -651,7 +651,7 @@ void *Sys_GetGameAPI (void *parms)
 			{
 				path = FS_NextPath (path);
 				if (!path)
-					return NULL;		// couldn't find one anywhere
+					break;
 				Com_sprintf (name, sizeof(name), "%s/%s", path, gamename);
 				game_library = LoadLibrary (name);
 				if (game_library)
@@ -662,6 +662,35 @@ void *Sys_GetGameAPI (void *parms)
 			}
 		}
 	}
+
+	// Bundled engines may use a separate working directory for original game data.
+	// Keep mods isolated: only look in the matching executable-relative mod folder.
+	if (!game_library)
+	{
+		char executable[MAX_PATH];
+		char *separator;
+		DWORD length = GetModuleFileNameA (NULL, executable, sizeof(executable));
+		if (length && length < sizeof(executable))
+		{
+			separator = strrchr (executable, '\\');
+			if (separator)
+			{
+				*separator = 0;
+				if (strlen(executable) + strlen(gamedir) + strlen(gamename) + 3 <= sizeof(name))
+				{
+					if (*gamedir)
+						Com_sprintf (name, sizeof(name), "%s/%s/%s", executable, gamedir, gamename);
+					else
+						Com_sprintf (name, sizeof(name), "%s/%s", executable, gamename);
+					game_library = LoadLibrary (name);
+					if (game_library)
+						Com_DPrintf ("LoadLibrary (%s)\n", name);
+				}
+			}
+		}
+	}
+	if (!game_library)
+		return NULL;
 
 	GetGameAPI = (void *)GetProcAddress (game_library, "GetGameAPI");
 	if (!GetGameAPI)
