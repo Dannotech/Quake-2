@@ -20,6 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+#ifdef _WIN64
+static mmove_t mmove_reloc;
+#endif
+
 field_t fields[] = {
 	{"classname", FOFS(classname), F_LSTRING},
 	{"origin", FOFS(s.origin), F_VECTOR},
@@ -110,6 +114,31 @@ field_t		savefields[] =
 	{"", FOFS(mynoise2), F_EDICT},
 	{"", FOFS(target_ent), F_EDICT},
 	{"", FOFS(chain), F_EDICT},
+
+#ifdef _WIN64
+	{"prethink", FOFS(prethink), F_FUNCTION},
+	{"think", FOFS(think), F_FUNCTION},
+	{"blocked", FOFS(blocked), F_FUNCTION},
+	{"touch", FOFS(touch), F_FUNCTION},
+	{"use", FOFS(use), F_FUNCTION},
+	{"pain", FOFS(pain), F_FUNCTION},
+	{"die", FOFS(die), F_FUNCTION},
+
+	{"stand", FOFS(monsterinfo.stand), F_FUNCTION},
+	{"idle", FOFS(monsterinfo.idle), F_FUNCTION},
+	{"search", FOFS(monsterinfo.search), F_FUNCTION},
+	{"walk", FOFS(monsterinfo.walk), F_FUNCTION},
+	{"run", FOFS(monsterinfo.run), F_FUNCTION},
+	{"dodge", FOFS(monsterinfo.dodge), F_FUNCTION},
+	{"attack", FOFS(monsterinfo.attack), F_FUNCTION},
+	{"melee", FOFS(monsterinfo.melee), F_FUNCTION},
+	{"sight", FOFS(monsterinfo.sight), F_FUNCTION},
+	{"checkattack", FOFS(monsterinfo.checkattack), F_FUNCTION},
+	{"currentmove", FOFS(monsterinfo.currentmove), F_MMOVE},
+
+	{"endfunc", FOFS(moveinfo.endfunc), F_FUNCTION},
+
+#endif
 
 	{NULL, 0, F_INT}
 };
@@ -239,7 +268,7 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 {
 	void		*p;
 	int			len;
-	int			index;
+	intptr_t	index;
 
 	p = (void *)(base + field->ofs);
 	switch (field->type)
@@ -257,29 +286,50 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 			len = strlen(*(char **)p) + 1;
 		else
 			len = 0;
-		*(int *)p = len;
+		*(intptr_t *)p = len;
 		break;
 	case F_EDICT:
 		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 			index = *(edict_t **)p - g_edicts;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
 	case F_CLIENT:
 		if ( *(gclient_t **)p == NULL)
 			index = -1;
 		else
 			index = *(gclient_t **)p - game.clients;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
 	case F_ITEM:
 		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 			index = *(gitem_t **)p - itemlist;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
+
+#ifdef _WIN64
+	//relative to code segment
+	case F_FUNCTION:
+		if (*(byte **)p == NULL)
+			index = 0;
+		else
+			index = (intptr_t)*(byte **)p - (intptr_t)InitGame;
+		*(intptr_t *)p = index;
+		break;
+
+	//relative to data segment
+	case F_MMOVE:
+		if (*(byte **)p == NULL)
+			index = 0;
+		else
+			index = (intptr_t)*(byte **)p - (intptr_t)&mmove_reloc;
+		*(intptr_t *)p = index;
+		break;
+
+#endif
 
 	default:
 		gi.error ("WriteEdict: unknown field type");
@@ -309,7 +359,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 {
 	void		*p;
 	int			len;
-	int			index;
+	intptr_t	index;
 
 	p = (void *)(base + field->ofs);
 	switch (field->type)
@@ -322,7 +372,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		break;
 
 	case F_LSTRING:
-		len = *(int *)p;
+		len = *(intptr_t *)p;
 		if (!len)
 			*(char **)p = NULL;
 		else
@@ -332,7 +382,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		}
 		break;
 	case F_GSTRING:
-		len = *(int *)p;
+		len = *(intptr_t *)p;
 		if (!len)
 			*(char **)p = NULL;
 		else
@@ -342,26 +392,47 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		}
 		break;
 	case F_EDICT:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(edict_t **)p = NULL;
 		else
 			*(edict_t **)p = &g_edicts[index];
 		break;
 	case F_CLIENT:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(gclient_t **)p = NULL;
 		else
 			*(gclient_t **)p = &game.clients[index];
 		break;
 	case F_ITEM:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(gitem_t **)p = NULL;
 		else
 			*(gitem_t **)p = &itemlist[index];
 		break;
+
+#ifdef _WIN64
+	//relative to code segment
+	case F_FUNCTION:
+		index = *(intptr_t *)p;
+		if ( index == 0 )
+			*(byte **)p = NULL;
+		else
+			*(byte **)p = (byte *)((intptr_t)InitGame + index);
+		break;
+
+	//relative to data segment
+	case F_MMOVE:
+		index = *(intptr_t *)p;
+		if (index == 0)
+			*(byte **)p = NULL;
+		else
+			*(byte **)p = (byte *)((intptr_t)&mmove_reloc + index);
+		break;
+
+#endif
 
 	default:
 		gi.error ("ReadEdict: unknown field type");
@@ -448,7 +519,11 @@ void WriteGame (char *filename, qboolean autosave)
 		gi.error ("Couldn't open %s", filename);
 
 	memset (str, 0, sizeof(str));
+#ifdef _WIN64
+	strcpy (str, __DATE__ "-64");
+#else
 	strcpy (str, __DATE__);
+#endif
 	fwrite (str, sizeof(str), 1, f);
 
 	game.autosaved = autosave;
@@ -474,7 +549,11 @@ void ReadGame (char *filename)
 		gi.error ("Couldn't open %s", filename);
 
 	fread (str, sizeof(str), 1, f);
-	if (strcmp (str, __DATE__))
+#ifdef _WIN64
+	if (memcmp (str, __DATE__ "-64", sizeof(__DATE__ "-64")))
+#else
+	if (memcmp (str, __DATE__, sizeof(__DATE__)))
+#endif
 	{
 		fclose (f);
 		gi.error ("Savegame from an older version.\n");
@@ -686,11 +765,15 @@ void ReadLevel (char *filename)
 
 	// check function pointer base address
 	fread (&base, sizeof(base), 1, f);
+
+#ifndef _WIN64
 	if (base != (void *)InitGame)
 	{
 		fclose (f);
 		gi.error ("ReadLevel: function pointers have moved");
 	}
+
+#endif
 
 	// load the level locals
 	ReadLevelLocals (f);

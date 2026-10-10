@@ -227,7 +227,7 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 {
 	void		*p;
 	int			len;
-	int			index;
+	intptr_t	index;
 
 	if (field->flags & FFL_SPAWNTEMP)
 		return;
@@ -248,28 +248,28 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 			len = strlen(*(char **)p) + 1;
 		else
 			len = 0;
-		*(int *)p = len;
+		*(intptr_t *)p = len;
 		break;
 	case F_EDICT:
 		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 			index = *(edict_t **)p - g_edicts;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
 	case F_CLIENT:
 		if ( *(gclient_t **)p == NULL)
 			index = -1;
 		else
 			index = *(gclient_t **)p - game.clients;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
 	case F_ITEM:
 		if ( *(edict_t **)p == NULL)
 			index = -1;
 		else
 			index = *(gitem_t **)p - itemlist;
-		*(int *)p = index;
+		*(intptr_t *)p = index;
 		break;
 
 	//relative to code segment
@@ -277,8 +277,8 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		if (*(byte **)p == NULL)
 			index = 0;
 		else
-			index = *(byte **)p - ((byte *)InitGame);
-		*(int *)p = index;
+			index = (intptr_t)*(byte **)p - (intptr_t)InitGame;
+		*(intptr_t *)p = index;
 		break;
 
 	//relative to data segment
@@ -286,8 +286,8 @@ void WriteField1 (FILE *f, field_t *field, byte *base)
 		if (*(byte **)p == NULL)
 			index = 0;
 		else
-			index = *(byte **)p - (byte *)&mmove_reloc;
-		*(int *)p = index;
+			index = (intptr_t)*(byte **)p - (intptr_t)&mmove_reloc;
+		*(intptr_t *)p = index;
 		break;
 
 	default:
@@ -321,7 +321,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 {
 	void		*p;
 	int			len;
-	int			index;
+	intptr_t	index;
 
 	if (field->flags & FFL_SPAWNTEMP)
 		return;
@@ -337,7 +337,7 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		break;
 
 	case F_LSTRING:
-		len = *(int *)p;
+		len = *(intptr_t *)p;
 		if (!len)
 			*(char **)p = NULL;
 		else
@@ -347,21 +347,21 @@ void ReadField (FILE *f, field_t *field, byte *base)
 		}
 		break;
 	case F_EDICT:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(edict_t **)p = NULL;
 		else
 			*(edict_t **)p = &g_edicts[index];
 		break;
 	case F_CLIENT:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(gclient_t **)p = NULL;
 		else
 			*(gclient_t **)p = &game.clients[index];
 		break;
 	case F_ITEM:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == -1 )
 			*(gitem_t **)p = NULL;
 		else
@@ -370,20 +370,20 @@ void ReadField (FILE *f, field_t *field, byte *base)
 
 	//relative to code segment
 	case F_FUNCTION:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if ( index == 0 )
 			*(byte **)p = NULL;
 		else
-			*(byte **)p = ((byte *)InitGame) + index;
+			*(byte **)p = (byte *)((intptr_t)InitGame + index);
 		break;
 
 	//relative to data segment
 	case F_MMOVE:
-		index = *(int *)p;
+		index = *(intptr_t *)p;
 		if (index == 0)
 			*(byte **)p = NULL;
 		else
-			*(byte **)p = (byte *)&mmove_reloc + index;
+			*(byte **)p = (byte *)((intptr_t)&mmove_reloc + index);
 		break;
 
 	default:
@@ -471,7 +471,11 @@ void WriteGame (char *filename, qboolean autosave)
 		gi.error ("Couldn't open %s", filename);
 
 	memset (str, 0, sizeof(str));
+#ifdef _WIN64
+	strcpy (str, __DATE__ "-64");
+#else
 	strcpy (str, __DATE__);
+#endif
 	fwrite (str, sizeof(str), 1, f);
 
 	game.autosaved = autosave;
@@ -497,7 +501,11 @@ void ReadGame (char *filename)
 		gi.error ("Couldn't open %s", filename);
 
 	fread (str, sizeof(str), 1, f);
-	if (strcmp (str, __DATE__))
+#ifdef _WIN64
+	if (memcmp (str, __DATE__ "-64", sizeof(__DATE__ "-64")))
+#else
+	if (memcmp (str, __DATE__, sizeof(__DATE__)))
+#endif
 	{
 		fclose (f);
 		gi.error ("Savegame from an older version.\n");
@@ -709,14 +717,14 @@ void ReadLevel (char *filename)
 
 	// check function pointer base address
 	fread (&base, sizeof(base), 1, f);
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(_WIN64)
 	if (base != (void *)InitGame)
 	{
 		fclose (f);
 		gi.error ("ReadLevel: function pointers have moved");
 	}
 #else
-	gi.dprintf("Function offsets %d\n", ((byte *)base) - ((byte *)InitGame));
+	gi.dprintf("Function base %p (current %p)\n", base, (void *)InitGame);
 #endif
 
 	// load the level locals

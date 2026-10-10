@@ -1,3 +1,99 @@
+# Windows x64 migration (VS2026)
+
+The supported Windows solution is `build\vs2026\quake2.sln` (v145 toolset and Windows SDK).
+All five projects have Debug and Release configurations for x64 and Win32.
+
+## Build and run
+
+From the repository root:
+
+```bat
+build\vs2026\build.bat Debug x64
+build\vs2026\build.bat Release x64
+```
+
+The script discovers MSBuild using Visual Studio Installer's `vswhere` and returns its exit code.
+Win32 remains available by passing `Win32` as the second argument.
+
+x64 outputs go to `x64\Debug\` or `x64\Release\`: `quake2.exe`, `ref_gl.dll`,
+`ref_soft.dll`, and `gamex64.dll`. The CTF module is in the configuration's `ctf\` folder.
+Intermediate files are separate from Win32. Original VC6 files and Unix builds are unchanged.
+
+Put legally owned original game PAK files in the output directory's `baseq2\` folder,
+then launch `quake2.exe` with that output directory as the working directory. For CTF,
+put its PAK files in the output directory's `ctf\` folder and pass `+set game ctf`.
+The loader selects `gamex64.dll` and respects the active mod when checking development paths.
+64-bit engines require 64-bit renderer, game, and GL-driver DLLs (including custom SGL drivers).
+
+## Architecture changes
+
+- x64 uses the existing C renderer/math implementations; x86 MASM is excluded.
+- Pointer alignment, cache addresses, sorting, structure offsets, CRT file-search handles,
+  console handles, and MCI audio callbacks use pointer-sized types or `offsetof`.
+- Polygon vertex stepping uses the size of a float rather than the size of a pointer.
+  Empty span lists are checked before accessing their coordinates.
+- x87 precision-control calls are restricted to x86; SSE on x64 does not support that setting.
+- Save pointer slots and relocation offsets use native pointer width. x64 save headers have a
+  `-64` marker, rejecting Win32 saves even when the build dates match. Base-game saves can be
+  reloaded after DLL ASLR changes. CTF x64 callback/movement fields also use relocation offsets.
+  Saves still depend on the same module build and are not portable between architectures.
+- Pointer truncation warnings C4302, C4311, and C4312 are errors in x64 configurations.
+
+## Verification
+
+All five projects build in Debug/Release for x64 and Win32. Runtime checks use locally installed
+original game assets copied into ignored build output, never into tracked source files.
+The x64 Debug software renderer loads `base1`, renders frames, saves, reloads, and exits.
+A separate OpenGL launch (system `opengl32`) reloads that save with a different game DLL base
+address and renders successfully. CTF loads its own x64 DLL and renders `base1`; normal CTF
+forces deathmatch and disables manual savegames.
+
+`build\vs2026\no_dialogs.cdb` captures CRT reports, invalid parameters, engine fatal errors,
+modal error dialogs, access violations, stack overflows, fail-fast, and unhandled exceptions.
+It prints diagnostics and terminates the debuggee rather than waiting for user attention.
+For an x64 Debug build, from its output directory, use the Windows SDK debugger:
+
+```bat
+cdb -y . -G -cf ..\..\build\vs2026\no_dialogs.cdb quake2.exe +set vid_ref soft +set vid_fullscreen 0 +set logfile 2 +exec smoke.cfg
+```
+
+Use an automatic config that loads a map, waits for client connection/rendering, performs checks,
+and quits. Check debugger output for `FAILURE:` and the game log for expected actions; debugger
+exit status alone is insufficient. Apply a process timeout in unattended runners.
+Sound and CD audio were disabled in rendering smoke tests; their hardware paths were not tested.
+
+## OpenGL regression benchmarks
+
+`build/vs2026/benchmark_opengl.py` compares the x86 and x64 Release builds using
+original game demos, fresh matching configs, warmups, repeated alternating runs,
+mode/driver validation, debugger guards, and a 30-second timeout per process.
+It requires Windows SDK x86/x64 CDB and original PAKs in `x64/Release/baseq2`.
+
+```bat
+build\vs2026\build.bat Release Win32
+build\vs2026\build.bat Release x64
+python build/vs2026/benchmark_opengl.py --output x64/benchmarks/opengl --repeats 7
+```
+
+The stock Windows loop waits for a millisecond between frames, putting even
+`timedemo 1` near a 1,000 FPS ceiling. Explicit `-benchmark` bypasses this wait only
+while timedemo is active and uses the same fixed 16ms simulation step on both
+architectures. The runner retains stock control runs and reports uncapped medians.
+Normal gameplay timing is unchanged. The runner supports `--demo` and `--modes`.
+
+On 2026-10-10, Ryzen 7 9700X / RTX 3080 / NVIDIA 616.92 system OpenGL, demo1's
+seven-run x64 medians were 5.6-10.3% above x86 across 640x480 through 3840x2160.
+Demo2's five-run cross-checks at 640x480, 1080p, 1440p, and 4K were also positive.
+No major regression or captured error was observed. Individual short runs vary;
+these measurements do not establish a guaranteed performance gain. Vsync and
+audio were off. 4K used native fullscreen; lower resolutions were windowed.
+Raw CSV, summaries, hashes, configs and logs are in the ignored `x64/benchmarks/`
+output directories. Custom SGL drivers were not benchmarked in this sweep.
+
+The following notes are historical documentation of the earlier Win32 migration.
+
+---
+
 # Quake 2 VC6 → VS2022 Migration Notes
 
 ## Overview

@@ -10,9 +10,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -32,8 +40,23 @@
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <EnableUnitySupport>true</EnableUnitySupport>
+  </PropertyGroup>
   <!-- Debug configuration -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
@@ -46,7 +69,13 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <!-- Output/Intermediate directories - outputs go to $(RepoRoot)\Release\ or $(RepoRoot)\Debug\ -->
@@ -56,9 +85,21 @@
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\x64\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\quake2\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)..\..\Debug\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Configuration)\quake2\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\..\x64\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\quake2\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -107,6 +148,51 @@
       </EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <!-- Original: /G5 /MT /W4 /GX /Zd /O2 -->
+      <!-- /G5 dropped (Pentium-specific, not in modern MSVC) -->
+      <!-- /GX replaced by /EHsc -->
+      <!-- /Zd replaced by /Zi (old line-number-only debug format removed) -->
+      <!-- /YX removed (automatic PCH detection removed in VS2005+) -->
+      <!-- Unity: group only files from the same folder so per-subsystem headers
+           (client.h, server.h, qcommon.h) are each used by exactly one batch -->
+      <CombineFilesOnlyFromTheSameFolder>true</CombineFilesOnlyFromTheSameFolder>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>C_ONLY;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\client;..\..\game;..\..\qcommon;..\..\server;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <!-- Suppress noisy-but-harmless VC6-era warnings -->
+      <TreatSpecificWarningsAsErrors>4302;4311;4312</TreatSpecificWarningsAsErrors>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4133;4028;4273;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- PCH disabled for the exe: source files span client/, server/, qcommon/, win32/ with
+           different umbrella headers. q_shared.h (the only truly universal header) has no
+           include guards, making ForcedIncludeFiles unsafe. PCH is on the four DLL projects. -->
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateManifest>false</GenerateManifest>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalOptions>/MANIFEST:NO %(AdditionalOptions)</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+      <EntryPointSymbol>
+      </EntryPointSymbol>
+    </Link>
+  </ItemDefinitionGroup>
   <!-- ======================== DEBUG COMPILE SETTINGS ======================== -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -137,6 +223,38 @@
       <AdditionalOptions>/MANIFEST:NO %(AdditionalOptions)</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <!-- Original: /G5 /MTd /W3 /GX /ZI /Od -->
+      <!-- /FR (browse info) dropped (not supported in modern MSVC) -->
+      <!-- /Gm (minimal rebuild) dropped (removed in VS2019) -->
+      <CombineFilesOnlyFromTheSameFolder>true</CombineFilesOnlyFromTheSameFolder>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>C_ONLY;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\client;..\..\game;..\..\qcommon;..\..\server;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatSpecificWarningsAsErrors>4302;4311;4312</TreatSpecificWarningsAsErrors>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4133;4028;4273;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateManifest>false</GenerateManifest>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalOptions>/MANIFEST:NO %(AdditionalOptions)</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <!-- ======================== SOURCE FILES ======================== -->

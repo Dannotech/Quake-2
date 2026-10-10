@@ -605,8 +605,9 @@ void R_PolygonDrawSpans(espan_t *pspan, qboolean iswater )
 
 	s_spanletvars.pz = 0;
 
-	do
+	while (pspan->count != DS_SPAN_LIST_END)
 	{
+		/* Empty polygons contain only the sentinel, with no u/v values. */
 		s_spanletvars.pdest   = (byte *)d_viewbuffer + ( d_scantable[pspan->v] /*r_screenwidth * pspan->v*/) + pspan->u;
 		s_spanletvars.pz      = d_pzbuffer + (d_zwidth * pspan->v) + pspan->u;
 		s_spanletvars.u       = pspan->u;
@@ -737,7 +738,7 @@ void R_PolygonDrawSpans(espan_t *pspan, qboolean iswater )
 NextSpan:
 		pspan++;
 
-	} while (pspan->count != DS_SPAN_LIST_END);
+	}
 }
 
 /*
@@ -988,7 +989,7 @@ void R_ClipAndDrawPoly( float alpha, qboolean isturbulent, qboolean textured )
 		scale = yscale * pout->zi;
 		pout->v = (ycenter - scale * transformed[1]);
 
-		pv += sizeof (vec5_t) / sizeof (pv);
+		pv += sizeof (vec5_t) / sizeof (*pv);
 	}
 
 // draw it

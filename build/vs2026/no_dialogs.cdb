@@ -1,0 +1,13 @@
+bu quake2!_CrtDbgReportW ".echo FAILURE: CRT report; k; q"
+bu quake2!_CrtDbgReport ".echo FAILURE: CRT report; k; q"
+bu quake2!_invalid_parameter ".echo FAILURE: invalid parameter; k; q"
+bu quake2!Sys_Error ".echo FAILURE: Sys_Error; da @rcx; k; q"
+bu user32!MessageBoxA ".echo FAILURE: dialog; da @rdx; k; q"
+bu user32!MessageBoxW ".echo FAILURE: dialog; du @rdx; k; q"
+bu user32!DialogBoxParamA ".echo FAILURE: modal dialog; k; q"
+bu user32!DialogBoxParamW ".echo FAILURE: modal dialog; k; q"
+sxd -c2 ".echo FAILURE: unhandled exception; k; q" *
+sxe -c ".echo FAILURE: access violation; k; q" av
+sxe -c ".echo FAILURE: stack overflow; k; q" sov
+sxe -c ".echo FAILURE: fail fast; k; q" 0xc0000409
+g

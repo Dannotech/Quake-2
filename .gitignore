@@ -32,3 +32,5 @@
 # Windows thumbnail / desktop cruft
 Thumbs.db
 Desktop.ini
+
+/x64/

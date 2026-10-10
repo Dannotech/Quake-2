@@ -588,8 +588,16 @@ void *Sys_GetGameAPI (void *parms)
 	void	*(*GetGameAPI) (void *);
 	char	name[MAX_OSPATH];
 	char	*path;
+	const char *gamedir = Cvar_VariableString ("game");
 	char	cwd[MAX_OSPATH];
-#if defined _M_IX86
+#if defined _M_X64
+	const char *gamename = "gamex64.dll";
+#ifdef NDEBUG
+	const char *debugdir = "x64/release";
+#else
+	const char *debugdir = "x64/debug";
+#endif
+#elif defined _M_IX86
 	const char *gamename = "gamex86.dll";
 
 #ifdef NDEBUG
@@ -614,7 +622,10 @@ void *Sys_GetGameAPI (void *parms)
 
 	// check the current debug directory first for development purposes
 	_getcwd (cwd, sizeof(cwd));
-	Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
+	if (*gamedir)
+		Com_sprintf (name, sizeof(name), "%s/%s/%s/%s", cwd, debugdir, gamedir, gamename);
+	else
+		Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
 	game_library = LoadLibrary ( name );
 	if (game_library)
 	{
@@ -623,7 +634,10 @@ void *Sys_GetGameAPI (void *parms)
 	else
 	{
 		// check the current directory for other development purposes
-		Com_sprintf (name, sizeof(name), "%s/%s", cwd, gamename);
+		if (*gamedir)
+			Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, gamedir, gamename);
+		else
+			Com_sprintf (name, sizeof(name), "%s/%s", cwd, gamename);
 		game_library = LoadLibrary ( name );
 		if (game_library)
 		{
@@ -885,7 +899,10 @@ static void SglTest_Run (void)
 		exit (3);
 	}
 
+
+#if defined(_M_IX86)
 	_controlfp (_PC_24, _MCW_PC);
+#endif
 
 	// Load the test map synchronously.
 	Cbuf_AddText (va("map %s\n", sgltest_mapname));
@@ -942,6 +959,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     MSG				msg;
 	int				time, oldtime, newtime;
 	char			*cddir;
+	qboolean benchmark_mode;
+	cvar_t *benchmark_timedemo;
 
     /* previous instances do not exist in Win32 */
     if (hPrevInstance)
@@ -977,6 +996,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 
 	Qcommon_Init (argc, argv);
+	benchmark_mode = COM_CheckParm ("-benchmark") != 0;
+	benchmark_timedemo = Cvar_Get ("timedemo", "0", 0);
+	if (benchmark_mode)
+		Com_Printf ("Benchmark mode: no millisecond wait during timedemos\n");
 
 	if (sgltest_active)
 	{
@@ -1008,7 +1031,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		{
 			newtime = Sys_Milliseconds ();
 			time = newtime - oldtime;
-		} while (time < 1);
+		} while (time < 1 && !(benchmark_mode && benchmark_timedemo->value));
+		// Explicit benchmarks avoid the ~1000 FPS clock ceiling and use the
+		// same simulation step on both architectures. Normal play is unchanged.
+		if (benchmark_mode && benchmark_timedemo->value)
+			time = 16;
 //			Con_Printf ("time:%5.2f - %5.2f = %5.2f\n", newtime, oldtime, time);
 
 		// -vtune: pin the per-frame delta to a fixed step so demo playback
@@ -1028,7 +1055,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			time = 16;
 
 		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
+
+#if defined(_M_IX86)
 		_controlfp( _PC_24, _MCW_PC );
+#endif
 		Qcommon_Frame (time);
 
 		if (vtune_mode)

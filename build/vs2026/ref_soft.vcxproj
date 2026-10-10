@@ -18,9 +18,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -38,7 +46,21 @@
     <CharacterSet>MultiByte</CharacterSet>
     <EnableUnitySupport>true</EnableUnitySupport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <EnableUnitySupport>true</EnableUnitySupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
@@ -54,7 +76,13 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -62,9 +90,19 @@
     <IntDir>$(SolutionDir)obj\$(Configuration)\ref_soft\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)..\..\x64\Release\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\ref_soft\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)..\..\Debug\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Configuration)\ref_soft\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)..\..\x64\Debug\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\ref_soft\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <!-- ======================== RELEASE ======================== -->
@@ -102,6 +140,35 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>C_ONLY;WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_soft;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatSpecificWarningsAsErrors>4302;4311;4312</TreatSpecificWarningsAsErrors>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- /Yu:r_local.h — all r_*.c files start with #include "r_local.h". No ForcedIncludeFiles. -->
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>r_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <!-- MASM global settings for release -->
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;ddraw.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_soft\ref_soft.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX64</TargetMachine>
+      <!-- Legacy MASM assembly has no SAFESEH handlers - disable linker requirement -->
+    </Link>
+  </ItemDefinitionGroup>
   <!-- ======================== DEBUG ======================== -->
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -128,6 +195,29 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>C_ONLY;WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir);..\..\ref_soft;..\..\client;..\..\game;..\..\qcommon;..\..\win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <TreatSpecificWarningsAsErrors>4302;4311;4312</TreatSpecificWarningsAsErrors>
+      <DisableSpecificWarnings>4244;4305;4018;4267;4996;4133;4028;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>r_local.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winmm.lib;ddraw.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>..\..\ref_soft\ref_soft.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <!-- ======================== SOURCE FILES (C) ======================== -->
@@ -178,30 +268,39 @@
   <!-- These are x86-only; excluded from x64 builds (not applicable for Win32 target) -->
   <ItemGroup>
     <MASM Include="..\..\ref_soft\r_aclipa.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_aclipa.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_draw16.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_draw16.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_drawa.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_drawa.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_edgea.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_edgea.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_polysa.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_polysa.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_scana.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_scana.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_spr8.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_spr8.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_surf8.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_surf8.obj</ObjectFileName>
     </MASM>
     <MASM Include="..\..\ref_soft\r_varsa.asm">
+      <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
       <ObjectFileName>$(IntDir)r_varsa.obj</ObjectFileName>
     </MASM>
   </ItemGroup>

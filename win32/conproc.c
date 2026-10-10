@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <process.h>
 #include <windows.h>
 #include "conproc.h"
+#include <stdint.h>
 
 #define CCOM_WRITE_TEXT		0x2
 // Param1 : Text
@@ -84,9 +85,9 @@ int CCheckParm (char *parm)
 void InitConProc (int argc, char **argv)
 {
 	unsigned	threadAddr;
-	HANDLE		hFile;
-	HANDLE		heventParent;
-	HANDLE		heventChild;
+	HANDLE		hFile = NULL;
+	HANDLE		heventParent = NULL;
+	HANDLE		heventChild = NULL;
 	int			t;
 
 	ccom_argc = argc;
@@ -95,20 +96,20 @@ void InitConProc (int argc, char **argv)
 // give QHOST a chance to hook into the console
 	if ((t = CCheckParm ("-HFILE")) > 0)
 	{
-		if (t < argc)
-			hFile = (HANDLE)atoi (ccom_argv[t+1]);
+		if (t + 1 < argc)
+			hFile = (HANDLE)(uintptr_t)_strtoui64 (ccom_argv[t+1], NULL, 10);
 	}
 		
 	if ((t = CCheckParm ("-HPARENT")) > 0)
 	{
-		if (t < argc)
-			heventParent = (HANDLE)atoi (ccom_argv[t+1]);
+		if (t + 1 < argc)
+			heventParent = (HANDLE)(uintptr_t)_strtoui64 (ccom_argv[t+1], NULL, 10);
 	}
 		
 	if ((t = CCheckParm ("-HCHILD")) > 0)
 	{
-		if (t < argc)
-			heventChild = (HANDLE)atoi (ccom_argv[t+1]);
+		if (t + 1 < argc)
+			heventChild = (HANDLE)(uintptr_t)_strtoui64 (ccom_argv[t+1], NULL, 10);
 	}
 
 
