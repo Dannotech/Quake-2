@@ -378,8 +378,9 @@ void S_PaintChannelFrom8 (channel_t *ch, sfxcache_t *sc, int count, int offset)
 	if (ch->rightvol > 255)
 		ch->rightvol = 255;
 		
-	lscale = snd_scaletable[ ch->leftvol >> 11];
-	rscale = snd_scaletable[ ch->rightvol >> 11];
+	// Map 0..255 channel volume to the 32 scale-table rows.
+	lscale = snd_scaletable[ ch->leftvol >> 3];
+	rscale = snd_scaletable[ ch->rightvol >> 3];
 	sfx = (signed char *)sc->data + ch->pos;
 
 	samp = &paintbuffer[offset];
