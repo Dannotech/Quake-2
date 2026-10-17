@@ -23,7 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define	MAXPRINTMSG	4096
 
-#define MAX_NUM_ARGVS	50
+// Match the Windows parser, including arguments expanded by profiling helpers.
+#define MAX_NUM_ARGVS	128
 
 
 int		com_argc;

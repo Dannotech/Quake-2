@@ -341,6 +341,12 @@ LONG WINAPI MainWndProc (
 		SCR_DirtyScreen ();	// force entire screen to update next frame
         return DefWindowProc (hWnd, uMsg, wParam, lParam);
 
+	case WM_CLOSE:
+		// Keep the window alive until the normal quit path releases the renderer.
+		// Destroying it here leaves the game loop running without a display.
+		Cbuf_AddText ("quit\n");
+		return 0;
+
 	case WM_DESTROY:
 		// let sound and input know about this?
 		cl_hwnd = NULL;
