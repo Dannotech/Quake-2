@@ -86,7 +86,7 @@ int			sgltest_frames = 30;
 /* =========================================================================
    VTune / timedemo profiling mode.
 
-   -vtune [mapname=demo1.dm2]
+   -vtune [mapname=demo1.dm2] [+set gl_driver SGL2.dll]
 
    Normal Q2 main loop (so perf is realistic), but:
      * cvars pre-configured for SGL + windowed + timedemo
@@ -831,6 +831,7 @@ Default map is demo1.dm2 (ships in stock baseq2/pak0).
 static qboolean VTune_ParseArgs (void)
 {
 	int i, j, consumed;
+	const char *vtune_gl_driver = "SGL2.dll";
 
 	for (i = 1; i < argc; i++)
 	{
@@ -852,12 +853,23 @@ static qboolean VTune_ParseArgs (void)
 			argv[j] = argv[j + consumed];
 		argc -= consumed;
 
+		// Honor an explicit caller-provided driver so SGL3 can use the same
+		// deterministic -vtune path without changing Q2 again. If absent,
+		// preserve the SGL2 default used by existing profiling scripts.
+		for (j = 1; j + 2 < argc; j++)
+		{
+			if (strcmp(argv[j], "+set") == 0 &&
+				strcmp(argv[j + 1], "gl_driver") == 0)
+			{
+				vtune_gl_driver = argv[j + 2];
+			}
+		}
+
 		vtune_mode = true;
 
 		{
 			static const char *overrides[][3] = {
 				{ "vid_ref",        "gl"                   },   // Use ref_gl, not ref_soft.
-				{ "gl_driver",      "SGL2.dll"             },   // Force SGL2 (the active driver; SGL is legacy).
 				{ "vid_fullscreen", "0"                    },   // Windowed so VTune can sample without lockups.
 				{ "timedemo",       "1"                    },   // Uncap FPS; print timing on demo end. (cvar name is "timedemo", not "cl_timedemo".)
 				{ "cl_introPlayed", "1"                    },   // Skip intro cinematic.
@@ -873,6 +885,12 @@ static qboolean VTune_ParseArgs (void)
 				argv[argc++] = "+set";
 				argv[argc++] = (char *)overrides[k][0];
 				argv[argc++] = (char *)overrides[k][1];
+			}
+			if (argc + 3 <= MAX_NUM_ARGVS)
+			{
+				argv[argc++] = "+set";
+				argv[argc++] = "gl_driver";
+				argv[argc++] = (char *)vtune_gl_driver;
 			}
 			// Kick off the demo immediately (late command, runs after renderer init).
 			if (argc + 2 <= MAX_NUM_ARGVS)
